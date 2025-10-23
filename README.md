@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hiring Management Web App
 
-## Getting Started
+A modern, enterprise-grade hiring management application built with **Next.js 16**, **React 19.2**, and **TypeScript**. Features dynamic form validation, resizable/reorderable tables, and AI-powered hand gesture photo capture.
 
-First, run the development server:
+## Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Core
+- **Next.js 16.0.0** (App Router, Turbopack stable)
+- **React 19.2.0** + **TypeScript 5.x**
+- **TailwindCSS v4** + **shadcn/ui**
+
+### State & Forms
+- **Zustand** - Global state management
+- **React Hook Form** - Dynamic form validation
+- **Zod** - Schema validation
+
+### Advanced Features
+- **TanStack Table v8** - Resizable/reorderable columns
+- **react-webcam** - Camera access
+- **@mediapipe/tasks-vision** - Hand gesture detection (1-2-3 fingers)
+
+## Features
+
+### Admin (Recruiter)
+- Job list with filtering/sorting by status
+- Create job modal with configurable application fields
+- Candidate management with resizable & reorderable table
+- Dynamic field configuration (mandatory/optional/off)
+
+### Applicant (Job Seeker)
+- Browse active job postings
+- View job details (salary, department, description)
+- Dynamic application form based on job configuration
+- Profile photo via hand gesture capture (1→2→3 fingers)
+- Form validation with real-time feedback
+
+## 🏗️ Project Structure
+
+```
+hiring-app/
+├── app/
+│   ├── (admin)/              # Admin routes (protected)
+│   │   ├── dashboard/        # Job list + Create modal
+│   │   └── candidates/[jobId]/ # Candidate table
+│   ├── (applicant)/          # Applicant routes (public)
+│   │   └── jobs/[slug]/apply/  # Dynamic form + gesture
+│   ├── api/                  # Mock API routes
+│   └── layout.tsx
+├── components/
+│   ├── features/             # Complex components
+│   ├── shared/               # Reusable components
+│   └── ui/                   # shadcn/ui components
+├── lib/
+│   ├── types.ts              # TypeScript interfaces
+│   └── utils.ts              # Utilities
+├── store/
+│   └── app-store.ts          # Zustand store
+└── data/
+    ├── mock-jobs.json        # Sample job data
+    └── mock-candidates.json  # Sample candidate data
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Clone the repository
+git clone <repository-url>
+cd hiring-app
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Install dependencies
+npm install
 
-## Learn More
+# Run development server
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Implementation Status
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Completed
+- [x] Next.js 16 project initialization
+- [x] TailwindCSS & shadcn/ui setup
+- [x] TypeScript types & interfaces
+- [x] Zustand store configuration
+- [x] Mock data files (jobs & candidates)
+- [x] Project structure with route groups
+- [x] All required dependencies installed
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### In Progress (Next Steps)
+- [ ] Home page with role selector
+- [ ] Admin dashboard (job list)
+- [ ] Create job modal with field configuration
+- [ ] Applicant job browsing
+- [ ] Dynamic application form
+- [ ] Hand gesture photo capture
+- [ ] Resizable/reorderable candidate table
+- [ ] API routes (mock backend)
+- [ ] Error handling & success states
+- [ ] Responsive design
 
-## Deploy on Vercel
+### MediaPipe Model
+Download the hand landmark model:
+```bash
+# Place in public/models/hand_landmarker.task
+curl -o public/models/hand_landmarker.task \
+  https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Documentation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js 16 Docs](https://nextjs.org/docs)
+- [React 19 Docs](https://react.dev)
+- [shadcn/ui Components](https://ui.shadcn.com)
+- [TanStack Table](https://tanstack.com/table/latest)
+- [MediaPipe Tasks Vision](https://developers.google.com/mediapipe/solutions/vision/hand_landmarker)
+
+## License
+
+Private project for case study purposes.
+# hiring-app
