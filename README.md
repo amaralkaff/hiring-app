@@ -34,7 +34,7 @@ A modern, enterprise-grade hiring management application built with **Next.js 16
 - Profile photo via hand gesture capture (1→2→3 fingers)
 - Form validation with real-time feedback
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 hiring-app/
@@ -113,7 +113,3 @@ curl -o public/models/hand_landmarker.task \
 - [TanStack Table](https://tanstack.com/table/latest)
 - [MediaPipe Tasks Vision](https://developers.google.com/mediapipe/solutions/vision/hand_landmarker)
 
-## License
-
-Private project for case study purposes.
-# hiring-app
