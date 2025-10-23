@@ -60,20 +60,6 @@ hiring-app/
     └── mock-candidates.json  # Sample candidate data
 ```
 
-### Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd hiring-app
-
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-```
-
 ## Implementation Status
 
 ### Completed
