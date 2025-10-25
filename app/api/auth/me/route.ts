@@ -4,9 +4,18 @@ export async function GET() {
   try {
     const supabase = createClient()
 
-    const { data: { user }, error } = await supabase.auth.getUser()
+    let user = null;
+    let error: { message?: string } | null = null;
 
-    if (error) {
+    try {
+      const { data, error: authError } = await supabase.auth.getUser();
+      user = data.user;
+      error = authError;
+    } catch (err) {
+      error = { message: 'Unknown error occurred' };
+    }
+
+    if (error && !error.message?.includes('Auth session missing')) {
       return Response.json(
         { error: error.message },
         { status: 401 }

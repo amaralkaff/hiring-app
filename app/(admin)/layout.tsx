@@ -3,30 +3,44 @@
 import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, useBreadcrumbs } from '@/components/ui/breadcrumb';
+import { UserDropdown } from '@/components/ui/user-dropdown';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { user, userRole, loading } = useAuth();
+  const { user, userRole } = useAuth();
   const router = useRouter();
   const breadcrumbs = useBreadcrumbs();
 
-  // Redirect to login if not authenticated or not admin
+  // Redirect if not authenticated or wrong role
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.push('/login');
-      } else if (userRole !== 'admin') {
-        router.push('/applicant/jobs');
-      }
+    if (user && userRole === null) {
+      // Still loading role, don't redirect yet
+      return;
     }
-  }, [user, userRole, loading, router]);
+    if (user && userRole !== 'admin') {
+      router.push('/jobs');
+    } else if (!user) {
+      router.push('/login');
+    }
+  }, [user, userRole, router]);
 
-  if (loading) {
+  // Show loading state while user exists but role is still loading
+  if (user && userRole === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
       </div>
     );
+  }
+
+  // Show minimal loading only when no user exists
+  if (!user) {
+    return null; // Let middleware handle redirect
+  }
+
+  // If wrong role, let redirect happen
+  if (userRole !== 'admin') {
+    return null; // Let redirect happen
   }
 
   return (
@@ -34,25 +48,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Breadcrumb items={breadcrumbs} />
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold text-gray-900">Hiring Dashboard</h1>
-              {user && (
-                <span className="ml-4 text-sm text-gray-600">
-                  Welcome, {user.user_metadata?.full_name || user.email} (Admin)
-                </span>
-              )}
+              <Breadcrumb items={breadcrumbs} />
             </div>
-            {user && (
-              <form action="/auth/signout" method="post">
-                <button
-                  type="submit"
-                  className="text-sm text-indigo-600 hover:text-indigo-500"
-                >
-                  Logout
-                </button>
-              </form>
-            )}
+            <UserDropdown user={user} userRole={userRole} />
           </div>
         </div>
       </header>

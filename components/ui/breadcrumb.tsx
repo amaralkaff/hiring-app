@@ -3,7 +3,6 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image';
 
 export interface BreadcrumbItem {
   label: string;
@@ -17,7 +16,7 @@ interface BreadcrumbProps {
 
 export function Breadcrumb({ items }: BreadcrumbProps) {
   return (
-    <nav className="flex items-center justify-between py-4 px-6">
+    <nav className="flex items-center py-4 px-6">
       <div className="flex items-center space-x-2">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
@@ -49,17 +48,6 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
             </div>
           );
         })}
-      </div>
-      
-      {/* User Profile Icon */}
-      <div className="w-10 h-10 rounded-full overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-        <Image
-          src="/avatar.png"
-          alt="User Profile"
-          width={40}
-          height={40}
-          className="w-full h-full object-cover"
-        />
       </div>
     </nav>
   );
@@ -115,6 +103,11 @@ export function useBreadcrumbs() {
       }
     }
     
+    // Profile page
+    if (segments[0] === 'profile') {
+      return [{ label: 'Profile Settings', href: '/profile', active: true }];
+    }
+
     // Default fallback
     return [{ label: 'Home', href: '/', active: true }];
   };

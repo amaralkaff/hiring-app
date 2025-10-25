@@ -196,7 +196,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000'}/auth/confirm`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/confirm`,
       scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
       queryParams: {
         access_type: 'offline',
@@ -210,6 +210,11 @@ export async function signInWithGoogle() {
     return { error: 'Gagal login dengan Google. Silakan coba lagi.' }
   }
 
+  // For server-side implementation, we need to handle the redirect
+  if (data.url) {
+    redirect(data.url)
+  }
+
   return { success: true, data }
 }
 
@@ -217,7 +222,29 @@ export async function signOut() {
   'use server'
 
   const supabase = await createClient()
-  await supabase.auth.signOut()
-  revalidatePath('/', 'layout')
-  redirect('/login')
+
+  try {
+    // Sign out the user
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      // Suppress expected auth errors - they're normal during logout
+      if (!error.message?.includes('AuthSessionMissingError')) {
+        console.error('Unexpected error signing out:', error)
+      }
+    }
+
+    // Revalidate the cache to clear any cached data
+    revalidatePath('/', 'layout')
+
+    // Redirect to login page
+    redirect('/login')
+  } catch (error) {
+    // Suppress expected redirect and auth errors - they're normal
+    if (error instanceof Error && !error.message.includes('NEXT_REDIRECT')) {
+      console.error('Unexpected logout error:', error)
+    }
+    // Still redirect to login even if there's an error
+    redirect('/login')
+  }
 }

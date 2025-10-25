@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useEffect, useRef, useState, useCallback } from 'react';
-import { CameraIcon, ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, CheckIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -28,6 +28,10 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [gestureSequence, setGestureSequence] = useState<number[]>([]);
+  const [lastDetectedGesture, setLastDetectedGesture] = useState(0);
+  const [gestureStableTime, setGestureStableTime] = useState(0);
+  const [expectedGesture, setExpectedGesture] = useState(1);
   
   // Function declarations - move all useCallback functions to the top
 
@@ -79,9 +83,9 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
         },
         runningMode: 'VIDEO',
         numHands: 1,
-        minHandDetectionConfidence: 0.5,
-        minHandPresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5
+        minHandDetectionConfidence: 0.7,
+        minHandPresenceConfidence: 0.7,
+        minTrackingConfidence: 0.7
       });
 
       // Verify the landmarker is properly initialized before storing it
@@ -140,6 +144,8 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
   const startCountdown = useCallback(() => {
     let count = 3;
     setCountdown(count);
+    // Stop finger detection when countdown starts
+    setCapturing(false);
 
     const interval = setInterval(() => {
       count--;
@@ -208,6 +214,11 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
       // Reset model state when modal closes
       setIsModelReady(false);
       setIsModelLoading(false);
+      // Reset gesture sequence state
+      setGestureSequence([]);
+      setLastDetectedGesture(0);
+      setGestureStableTime(0);
+      setExpectedGesture(1);
       // Clear the global landmarker
       (window as { handLandmarker?: unknown }).handLandmarker = null;
 
@@ -359,14 +370,46 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
           // Get current finger count for this specific hand
           const currentFingerCount = countFingers(points);
           
-          // Draw "Hand Detected" label with current finger count
+          // Draw "Hand Detected" label with current finger count and sequence progress
           // Add highlight background with higher contrast
           ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'; // Darker background for better contrast
-          const text = currentFingerCount === 0 ? 'Show 1 finger to start' :
-                      currentFingerCount === 1 ? 'Pose 1 (1 finger)' :
-                      currentFingerCount === 2 ? 'Pose 2 (2 fingers)' :
-                      currentFingerCount === 3 ? 'Pose 3 (3 fingers)' :
-                      'Invalid gesture - show 1, 2, or 3 fingers';
+
+          // Get sequence progress from state
+          const sequenceProgress = gestureSequence.length;
+          const nextExpected = expectedGesture;
+
+          let text = '';
+          if (currentFingerCount === 0) {
+            if (sequenceProgress === 0) {
+              text = 'Show 1 finger to start (1/3)';
+            } else if (sequenceProgress === 1) {
+              text = 'Show 2 fingers (2/3)';
+            } else if (sequenceProgress === 2) {
+              text = 'Show 3 fingers (3/3)';
+            } else {
+              text = 'Sequence complete!';
+            }
+          } else if (currentFingerCount === 1) {
+            if (sequenceProgress === 0 && nextExpected === 1) {
+              text = '✓ Hold 1 finger... (1/3)';
+            } else {
+              text = '1 finger detected';
+            }
+          } else if (currentFingerCount === 2) {
+            if (sequenceProgress === 1 && nextExpected === 2) {
+              text = '✓ Hold 2 fingers... (2/3)';
+            } else {
+              text = '2 fingers detected';
+            }
+          } else if (currentFingerCount === 3) {
+            if (sequenceProgress === 2 && nextExpected === 3) {
+              text = '✓ Hold 3 fingers... (3/3)';
+            } else {
+              text = '3 fingers detected';
+            }
+          } else {
+            text = 'Invalid gesture - show 1, 2, or 3 fingers';
+          }
           
           // Measure text to create background rectangle
           ctx.font = 'bold 20px Arial'; // Larger font for better visibility
@@ -413,19 +456,46 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
 
       setFingerCount(count);
 
-      // Track gesture sequence: 1 -> 2 -> 3 (as per PRD requirement)
-      // Since we're no longer tracking gestureSequence, we'll handle the sequence logic differently
-      // We'll use a simple state machine approach to track the current expected gesture
-      if (count === 1) {
-        // If we detect 1 finger, start countdown after a short delay
-        setTimeout(() => {
-          startCountdown();
-        }, 1000);
-      } else if (count === 2 || count === 3) {
-        // For 2 or 3 fingers, also start countdown (simplified logic)
-        setTimeout(() => {
-          startCountdown();
-        }, 1000);
+      const currentTime = Date.now();
+
+      // Only count valid gestures (1, 2, or 3 fingers)
+      if (count > 0 && count <= 3) {
+        // Check if this is the same gesture as before
+        if (count === lastDetectedGesture) {
+          // If gesture is stable for at least 800ms, consider it detected
+          if (currentTime - gestureStableTime > 800) {
+            // Check if this is the expected gesture in sequence
+            if (count === expectedGesture) {
+              // Add to sequence
+              const newSequence = [...gestureSequence, count];
+              setGestureSequence(newSequence);
+              setLastDetectedGesture(0); // Reset to prevent multiple triggers
+              setGestureStableTime(0);
+
+              // If we've detected 1-2-3 sequence, start countdown
+              if (newSequence.length === 3) {
+                // Clear the reference image and start countdown
+                setTimeout(() => {
+                  startCountdown();
+                }, 500); // Small delay before starting countdown
+              } else {
+                // Move to next expected gesture
+                setExpectedGesture(count + 1);
+              }
+            }
+          }
+        } else {
+          // New gesture detected, start stability timer
+          setLastDetectedGesture(count);
+          setGestureStableTime(currentTime);
+        }
+      } else {
+        // No valid gesture, reset timers but keep sequence progress
+        if (count === 0 && currentTime - gestureStableTime > 1500) {
+          // Reset if no gesture for 1.5 seconds
+          setLastDetectedGesture(0);
+          setGestureStableTime(0);
+        }
       }
     };
 
@@ -498,7 +568,7 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
         cancelAnimationFrame(raf);
       }
     };
-  }, [isModalOpen, capturing, isModelLoading, isModelReady, startCountdown]);
+  }, [isModalOpen, capturing, isModelLoading, isModelReady, startCountdown, gestureSequence, lastDetectedGesture, gestureStableTime, expectedGesture]);
 
   
   
@@ -506,6 +576,10 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
     setCapturedImage(null);
     setFingerCount(0);
     setCapturing(false);
+    setGestureSequence([]);
+    setLastDetectedGesture(0);
+    setGestureStableTime(0);
+    setExpectedGesture(1);
 
     // Turn off webcam before retaking
     turnOffWebcam();
@@ -574,6 +648,10 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
       setTimeout(() => {
         setCapturing(true);
         setFingerCount(0);
+        setGestureSequence([]);
+        setLastDetectedGesture(0);
+        setGestureStableTime(0);
+        setExpectedGesture(1);
       }, 500);
     }, 300);
   };
@@ -584,7 +662,11 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
       setIsModalOpen(false);
       setCapturedImage(null);
       setCapturing(false);
-      
+        setGestureSequence([]);
+        setLastDetectedGesture(0);
+        setGestureStableTime(0);
+        setExpectedGesture(1);
+
       // Ensure webcam is turned off after saving
       turnOffWebcam();
     }
@@ -611,10 +693,10 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
             type="button"
             variant="outline"
             onClick={() => setIsModalOpen(true)}
-            className="w-full"
+            className="w-full font-bold"
           >
-            <CameraIcon className="w-4 h-4 mr-2" />
-            Photo Profile *
+            <ArrowUpTrayIcon className="w-4 h-4" />
+            Take a Picture
           </Button>
         </div>
       ) : (
@@ -636,17 +718,17 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
             type="button"
             variant="outline"
             onClick={() => setIsModalOpen(true)}
-            className="w-full"
+            className="w-full font-bold"
           >
-            <CameraIcon className="w-4 h-4 mr-2" />
-            Capture Photo
+            <ArrowUpTrayIcon className="w-4 h-4" />
+            Take a Picture
           </Button>
         </div>
       )}
 
       {/* Capture Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>Raise Your Hand to Capture </DialogTitle>
             <DialogDescription>
@@ -689,7 +771,7 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
                     <div className="text-white px-4 py-3 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
-                         
+
                           {/* Always show current detected finger count */}
                           {fingerCount > 0 && (
                             <div className="mt-2">
@@ -704,17 +786,36 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
                             <div className="mt-2">
                               <div className="bg-black bg-opacity-80 rounded-lg px-3 py-2 inline-block">
                                 <p className="text-sm font-semibold text-yellow-300">
-                                  Show 1, 2, or 3 fingers
+                                  {gestureSequence.length === 0 ? 'Show 1 finger to start (1/3)' :
+                                   gestureSequence.length === 1 ? 'Show 2 fingers (2/3)' :
+                                   gestureSequence.length === 2 ? 'Show 3 fingers (3/3)' :
+                                   'Show 1, 2, or 3 fingers'}
                                 </p>
                               </div>
                             </div>
                           )}
                         </div>
-                        {countdown !== null && (
-                          <div className="text-4xl font-bold">{countdown}</div>
-                        )}
-                      </div>
+                        </div>
                     </div>
+                  </div>
+
+                  {/* Reference Frame - Top Right */}
+                  <div className="absolute top-4 right-4">
+                    {countdown !== null ? (
+                      // Show countdown number when counting down
+                      <span className="text-6xl text-black">{countdown}</span>
+                    ) : (
+                      // Show gesture reference image when not counting down
+                      <Image
+                        src={gestureSequence.length === 0 ? "/meme-finger-1.png" :
+                             gestureSequence.length === 1 ? "/meme-finger-2.png" :
+                             gestureSequence.length === 2 ? "/meme-finger-3.png" :
+                             "/meme-finger-1.png"}
+                        alt="Current gesture reference"
+                        width={240}
+                        height={240}
+                      />
+                    )}
                   </div>
 
                   {/* Controls */}

@@ -10,52 +10,41 @@ import type { Job } from '@/lib/types';
 export default function JobsListPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Fetch jobs on mount
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    const controller = new AbortController();
 
-  const fetchJobs = async () => {
-    try {
-      // Fetch from API (only active jobs)
-      const response = await fetch('/api/jobs?status=active');
-      const data = await response.json();
-      
-      // Also check localStorage for custom jobs
-      const localJobs = localStorage.getItem('custom_jobs');
-      const customJobs = localJobs ? JSON.parse(localJobs) : [];
-      const activeCustomJobs = customJobs.filter((j: Job) => j.status === 'active');
-      
-      const allJobs = [...data.data, ...activeCustomJobs];
-      setJobs(allJobs);
-      
-      // Select first job by default
-      if (allJobs.length > 0) {
-        setSelectedJob(allJobs[0]);
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/jobs?status=active', { signal: controller.signal });
+        const data = await response.json();
+        const jobsList = data.data || [];
+
+        const allJobs = jobsList;
+        setJobs(allJobs);
+
+        if (allJobs.length > 0) {
+          setSelectedJob(allJobs[0]);
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error('Error fetching jobs:', error);
+        setJobs([]);
+        setSelectedJob(null);
       }
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Loading jobs...</p>
-      </div>
-    );
-  }
+    fetchData();
+
+    return () => controller.abort();
+  }, []);
 
   if (jobs.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center max-w-md">
-          <p className="text-gray-600">No active jobs available at the moment</p>
-        </div>
+      <div className="w-full pt-10 px-[104px] pb-10 bg-gray-50 min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">No jobs available</p>
       </div>
     );
   }
@@ -101,7 +90,7 @@ export default function JobsListPage() {
                 {/* Salary */}
                 <div className="flex items-center text-sm text-gray-600">
                   <CurrencyDollarIcon className="w-4 h-4 mr-2 text-gray-400" />
-                  <span>{job.salary_range.display_text}</span>
+                  <span>{job.salary_range?.display_text || 'Salary not specified'}</span>
                 </div>
               </div>
             ))}

@@ -205,7 +205,7 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
     };
 
     try {
-      // Save to API which writes to mock-jobs.json
+      // Save to Supabase database
       const response = await fetch('/api/jobs', {
         method: 'POST',
         headers: {

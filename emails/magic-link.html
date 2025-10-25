@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk ke Rakamin</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #F5F5F5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #F5F5F5;
+            padding: 40px 20px;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1F2937;
+        }
+        .content-card {
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            padding: 40px 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-top: 32px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1F2937;
+            margin: 0 0 16px 0;
+            text-align: center;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #1F2937;
+            margin: 0 0 8px 0;
+        }
+        .message {
+            font-size: 16px;
+            color: #1F2937;
+            margin: 0 0 32px 0;
+            line-height: 1.5;
+        }
+        .link-text {
+            font-weight: 600;
+        }
+        .website-link {
+            color: #01959F;
+            text-decoration: none;
+        }
+        .button-container {
+            text-align: center;
+            margin: 32px 0;
+        }
+        .magic-link-button {
+            display: inline-block;
+            background-color: #01959F;
+            color: #FFFFFF !important;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .magic-link-button:hover {
+            background-color: #017A84;
+        }
+        .expiry-notice {
+            font-size: 14px;
+            color: #6B7280;
+            text-align: center;
+            margin: 24px 0 0 0;
+        }
+        .footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #E5E7EB;
+        }
+        .company-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1F2937;
+            margin: 0 0 8px 0;
+        }
+        .company-address {
+            font-size: 14px;
+            color: #6B7280;
+            line-height: 1.6;
+            margin: 0 0 16px 0;
+        }
+        .copyright {
+            font-size: 12px;
+            color: #9CA3AF;
+            margin: 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                padding: 20px 10px;
+            }
+            .content-card {
+                padding: 24px 20px;
+            }
+            .title {
+                font-size: 20px;
+            }
+            .message {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Logo -->
+        <div class="logo-container">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M8 8L16 4L24 8L16 12L8 8Z" fill="#01959F"/>
+                    <path d="M8 16L16 12L24 16L16 20L8 16Z" fill="#17C3CE"/>
+                    <path d="M8 24L16 20L24 24L16 28L8 24Z" fill="#01959F"/>
+                </svg>
+                <span class="logo-text">Rakamin</span>
+            </div>
+        </div>
+
+        <!-- Content Card -->
+        <div class="content-card">
+            <h1 class="title">Masuk ke Rakamin</h1>
+            
+            <p class="greeting">Hai,</p>
+            
+            <p class="message">
+                Berikut adalah <span class="link-text">link masuk</span> yang kamu request dari 
+                <a href="{{ .SiteURL }}" class="website-link">www.rakamin.com</a>
+            </p>
+
+            <!-- Magic Link Button -->
+            <div class="button-container">
+                <a href="{{ .ConfirmationURL }}" class="magic-link-button">
+                    Masuk ke Rakamin
+                </a>
+            </div>
+
+            <p class="expiry-notice">
+                Untuk keamanan, link hanya dapat diakses dalam 30 menit. Jika kamu tidak ada permintaan untuk login melalui link, abaikan pesan ini.
+            </p>
+
+            <!-- Footer -->
+            <div class="footer">
+                <p class="company-name">PT. Rakamin Kolektif Madani</p>
+                <p class="company-address">
+                    Menara Caraka - Jl. Mega Kuningan Barat, Kuningan, Kecamatan Setiabudi, Jakarta Selatan, DKI Jakarta 12950
+                </p>
+                <p class="copyright">© Rakamin 2025. All rights reserved</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

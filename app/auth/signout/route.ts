@@ -6,9 +6,14 @@ export async function POST() {
   const supabase = await createClient()
 
   // Check if a user's logged in
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // AuthSessionMissingError is expected here - user may not be logged in
+    user = null;
+  }
 
   if (user) {
     await supabase.auth.signOut()

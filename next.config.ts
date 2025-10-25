@@ -4,6 +4,24 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com',
+        port: '',
+        pathname: '/api/**',
+        search: '',
+      },
+      {
+        protocol: 'https',
+        hostname: 'khzrfwyofxqrqvelydkn.supabase.co',
+        port: '',
+        pathname: '/storage/v1/**',
+        search: '',
+      },
+    ],
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.plugins.push(

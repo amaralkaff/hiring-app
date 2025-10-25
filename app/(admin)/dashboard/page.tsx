@@ -76,6 +76,11 @@ export default function AdminDashboard() {
     filterAndSortJobs();
   }, [filterAndSortJobs]);
 
+  // Fetch jobs on mount
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
   const fetchJobs = async () => {
     try {
       const response = await fetch('/api/jobs');

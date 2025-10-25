@@ -56,8 +56,6 @@ hiring-app/
 ├── store/
 │   └── app-store.ts          # Zustand store
 └── data/
-    ├── mock-jobs.json        # Sample job data
-    └── mock-candidates.json  # Sample candidate data
 ```
 
 ## Implementation Status
@@ -67,7 +65,7 @@ hiring-app/
 - [x] TailwindCSS & shadcn/ui setup
 - [x] TypeScript types & interfaces
 - [x] Zustand store configuration
-- [x] Mock data files (jobs & candidates)
+- [x] Supabase database integration
 - [x] Project structure with route groups
 - [x] All required dependencies installed
 
@@ -79,7 +77,7 @@ hiring-app/
 - [ ] Dynamic application form
 - [ ] Hand gesture photo capture
 - [ ] Resizable/reorderable candidate table
-- [ ] API routes (mock backend)
+- [x] API routes with Supabase backend
 - [ ] Error handling & success states
 - [ ] Responsive design
 
