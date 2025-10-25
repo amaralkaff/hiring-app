@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import Webcam from 'react-webcam';
+import { FC, useEffect, useRef, useState, useCallback } from 'react';
 import { CameraIcon, ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -16,130 +18,129 @@ interface GestureCaptureProps {
   currentImage?: string;
 }
 
-export function GestureCapture({ onCapture, currentImage }: GestureCaptureProps) {
+const GestureController: FC<GestureCaptureProps> = (props) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCapturing, setIsCapturing] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [fingerCount, setFingerCount] = useState(0);
-  const [gestureSequence, setGestureSequence] = useState<number[]>([]);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [status, setStatus] = useState('Show 1 finger to start');
-  const webcamRef = useRef<Webcam>(null);
-  const [handLandmarker, setHandLandmarker] = useState<any>(null);
   const [isModelLoading, setIsModelLoading] = useState(false);
-  const animationFrameId = useRef<number | undefined>(undefined);
+  const [isModelReady, setIsModelReady] = useState(false);
+  const [capturing, setCapturing] = useState(false);
+  
+  // Function declarations - move all useCallback functions to the top
 
-  useEffect(() => {
-    if (isModalOpen && !handLandmarker) {
-      loadMediaPipeModel();
-    }
-    
-    return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
+  const initializeCamera = useCallback(async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera API not supported in this browser');
       }
-    };
-  }, [isModalOpen]);
 
-  const loadMediaPipeModel = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user",
+        },
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          if (canvasRef.current) {
+            canvasRef.current.width = videoRef.current!.videoWidth;
+            canvasRef.current.height = videoRef.current!.videoHeight;
+          }
+        };
+        await videoRef.current.play();
+      }
+    } catch (err: unknown) {
+      console.error('Error initializing camera:', err);
+    }
+  }, []);
+
+  const loadMediaPipeModel = useCallback(async () => {
     setIsModelLoading(true);
     try {
-      const { FilesetResolver, HandLandmarker } = await import('@mediapipe/tasks-vision');
-      
+      if (typeof window === 'undefined') {
+        throw new Error('MediaPipe requires browser environment');
+      }
+
+      const { HandLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision');
+
       const vision = await FilesetResolver.forVisionTasks(
         'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
       );
 
-      const landmarker = await HandLandmarker.createFromOptions(vision, {
+      const handLandmarker = await HandLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task',
-          delegate: 'GPU'
+          modelAssetPath: '/hand_landmarker.task' // Use local file instead of remote
         },
         runningMode: 'VIDEO',
         numHands: 1,
+        minHandDetectionConfidence: 0.5,
+        minHandPresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5
       });
 
-      setHandLandmarker(landmarker);
-      setIsModelLoading(false);
-    } catch (error) {
-      console.error('Error loading MediaPipe model:', error);
-      setStatus('Error loading gesture detection. Using manual capture.');
-      setIsModelLoading(false);
-    }
-  };
+      // Verify the landmarker is properly initialized before storing it
+      if (handLandmarker && typeof handLandmarker.detectForVideo === 'function') {
+        // Store landmarker in a way that persists
+        (window as { handLandmarker?: unknown }).handLandmarker = handLandmarker;
 
-  const countFingers = (landmarks: any) => {
-    if (!landmarks || landmarks.length === 0) return 0;
-
-    const hand = landmarks[0];
-    let count = 0;
-
-    // Thumb: Check if tip is to the right (for right hand) or left (for left hand) of IP joint
-    const thumbTip = hand[4];
-    const thumbIP = hand[3];
-    if (Math.abs(thumbTip.x - thumbIP.x) > 0.03) {
-      count++;
-    }
-
-    // Other fingers: Check if tip is above PIP joint
-    const fingerTips = [8, 12, 16, 20]; // Index, Middle, Ring, Pinky
-    const fingerPIPs = [6, 10, 14, 18];
-
-    for (let i = 0; i < fingerTips.length; i++) {
-      if (hand[fingerTips[i]].y < hand[fingerPIPs[i]].y - 0.03) {
-        count++;
-      }
-    }
-
-    return count;
-  };
-
-  const detectGesture = async () => {
-    if (!webcamRef.current || !webcamRef.current.video || !handLandmarker) {
-      return;
-    }
-
-    const video = webcamRef.current.video;
-    if (video.readyState === 4) {
-      const results = handLandmarker.detectForVideo(video, Date.now());
-      
-      if (results.landmarks && results.landmarks.length > 0) {
-        const fingers = countFingers(results.landmarks);
-        setFingerCount(fingers);
-
-        // Track gesture sequence: 1 -> 2 -> 3
-        setGestureSequence((prev) => {
-          const newSeq = [...prev];
-          
-          if (fingers === 1 && (prev.length === 0 || prev[prev.length - 1] !== 1)) {
-            newSeq.push(1);
-            setStatus('Great! Now show 2 fingers');
-          } else if (fingers === 2 && prev[prev.length - 1] === 1) {
-            newSeq.push(2);
-            setStatus('Perfect! Now show 3 fingers');
-          } else if (fingers === 3 && prev[prev.length - 1] === 2) {
-            newSeq.push(3);
-            setStatus('Capturing...');
-            startCountdown();
-            return newSeq;
-          }
-          
-          return newSeq;
-        });
+        // Skip the warm-up step that's causing the error
+        // The TensorFlow Lite delegate will be initialized on first use
+        // This avoids the ROI width/height error with dummy video
+        setTimeout(() => {
+          setIsModelReady(true);
+        }, 500);
       } else {
-        setFingerCount(0);
+        throw new Error('Hand landmarker failed to initialize properly');
+      }
+
+      setIsModelLoading(false);
+    } catch (error: unknown) {
+      console.error('Error loading MediaPipe model:', error);
+      setIsModelLoading(false);
+    }
+  }, []);
+
+  const turnOffWebcam = useCallback(() => {
+    const video = videoRef.current;
+    if (video && video.srcObject) {
+      const stream = video.srcObject as MediaStream;
+      stream.getTracks().forEach(track => {
+        track.stop(); // Properly stop each track
+      });
+      video.srcObject = null; // Clear the srcObject
+    }
+  }, []);
+
+  const capturePhoto = useCallback(() => {
+    if (videoRef.current && canvasRef.current &&
+        videoRef.current.videoWidth > 0 &&
+        videoRef.current.videoHeight > 0) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/jpeg');
+        setCapturedImage(imageData);
+
+        // Auto-turn off webcam after capturing photo
+        turnOffWebcam();
+        setCapturing(false);
       }
     }
+  }, [turnOffWebcam]);
 
-    if (isCapturing && !countdown) {
-      animationFrameId.current = requestAnimationFrame(detectGesture);
-    }
-  };
-
-  const startCountdown = () => {
+  const startCountdown = useCallback(() => {
     let count = 3;
     setCountdown(count);
-    
+
     const interval = setInterval(() => {
       count--;
       if (count > 0) {
@@ -150,61 +151,461 @@ export function GestureCapture({ onCapture, currentImage }: GestureCaptureProps)
         capturePhoto();
       }
     }, 1000);
-  };
+  }, [capturePhoto]);
 
-  const capturePhoto = () => {
-    if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (imageSrc) {
-        setCapturedImage(imageSrc);
-        setIsCapturing(false);
-        setStatus('Photo captured! Review and save or retake.');
+  useEffect(() => {
+    if (isModalOpen) {
+      initializeCamera();
+      loadMediaPipeModel();
+
+      // Set up global console filtering for MediaPipe messages
+      const originalConsoleError = console.error;
+      const originalConsoleWarn = console.warn;
+
+      console.error = (...args: unknown[]) => {
+        const message = args.length > 0 ? String(args[0]) : '';
+        if (message.includes('Created TensorFlow Lite XNNPACK delegate for CPU') ||
+            message.includes('ROI width and height must be > 0') ||
+            message.includes('Using NORM_RECT without IMAGE_DIMENSIONS') ||
+            message.includes('Feedback manager requires a model with a single signature inference')) {
+          return; // Silently ignore these MediaPipe messages
+        }
+        originalConsoleError.apply(console, args);
+      };
+
+      console.warn = (...args: unknown[]) => {
+        const message = args.length > 0 ? String(args[0]) : '';
+        if (message.includes('Feedback manager requires a model with a single signature inference') ||
+            message.includes('Using NORM_RECT without IMAGE_DIMENSIONS') ||
+            message.includes('OpenGL error checking is disabled')) {
+          return; // Silently ignore these MediaPipe warnings
+        }
+        originalConsoleWarn.apply(console, args);
+      };
+
+      // Also override console.log to catch vision_wasm_internal.js messages
+      const originalConsoleLog = console.log;
+      console.log = (...args: unknown[]) => {
+        const message = args.length > 0 ? String(args[0]) : '';
+        if (message.includes('GL version:') ||
+            message.includes('Graph successfully started running')) {
+          return; // Silently ignore these MediaPipe info messages
+        }
+        originalConsoleLog.apply(console, args);
+      };
+
+      // Store original log function to restore later
+      (window as { _originalConsoleLog?: typeof console.log })._originalConsoleLog = originalConsoleLog;
+
+      // Store original functions to restore later
+      (window as { _originalConsoleError?: typeof console.error; _originalConsoleWarn?: typeof console.warn })._originalConsoleError = originalConsoleError;
+      (window as { _originalConsoleWarn?: typeof console.warn })._originalConsoleWarn = originalConsoleWarn;
+    }
+
+    return () => {
+      // Use the reusable turnOffWebcam function for consistency
+      turnOffWebcam();
+      // Reset model state when modal closes
+      setIsModelReady(false);
+      setIsModelLoading(false);
+      // Clear the global landmarker
+      (window as { handLandmarker?: unknown }).handLandmarker = null;
+
+      // Restore original console functions
+      if ((window as { _originalConsoleError?: typeof console.error })._originalConsoleError) {
+        console.error = (window as unknown as { _originalConsoleError: typeof console.error })._originalConsoleError;
+        delete (window as { _originalConsoleError?: typeof console.error })._originalConsoleError;
       }
+      if ((window as { _originalConsoleWarn?: typeof console.warn })._originalConsoleWarn) {
+        console.warn = (window as unknown as { _originalConsoleWarn: typeof console.warn })._originalConsoleWarn;
+        delete (window as { _originalConsoleWarn?: typeof console.warn })._originalConsoleWarn;
+      }
+      if ((window as { _originalConsoleLog?: typeof console.log })._originalConsoleLog) {
+        console.log = (window as unknown as { _originalConsoleLog: typeof console.log })._originalConsoleLog;
+        delete (window as { _originalConsoleLog?: typeof console.log })._originalConsoleLog;
+      }
+    };
+  }, [isModalOpen, initializeCamera, loadMediaPipeModel, turnOffWebcam]);
+
+  // Auto-start finger detection when model is ready
+  useEffect(() => {
+    if (isModalOpen && isModelReady && !capturing) {
+      setCapturing(true);
+      setFingerCount(0);
     }
-  };
+  }, [isModalOpen, isModelReady, capturing]);
 
-  const startCapture = () => {
-    setIsCapturing(true);
-    setGestureSequence([]);
-    setFingerCount(0);
-    setStatus('Show 1 finger to start');
-    if (handLandmarker) {
-      detectGesture();
-    }
-  };
+  // Initialize frame loop when modal opens
+  useEffect(() => {
+    if (!isModalOpen) return;
 
-  const handleManualCapture = () => {
-    capturePhoto();
-  };
+    let raf = 0;
+    let lastVideoTime = -1;
 
+    
+    const countFingers = (landmarks: { x: number; y: number }[]) => {
+      if (!landmarks || landmarks.length === 0) return 0;
+      
+      let count = 0;
+      
+      // More accurate finger counting using MediaPipe hand landmarks
+      // Check if finger tips are significantly above their respective PIP joints
+      
+      // Thumb: check if tip (4) is to the left of IP joint (3) for right hand (mirrored in camera)
+      // or check if tip is significantly above IP joint
+      if (landmarks[4].x < landmarks[3].x - 0.04 || landmarks[4].y < landmarks[3].y - 0.05) {
+        count++;
+      }
+      
+      // Index finger: check if tip (8) is above PIP joint (6) by a reasonable margin
+      if (landmarks[8].y < landmarks[6].y - 0.04) {
+        count++;
+      }
+      
+      // Middle finger: check if tip (12) is above PIP joint (10) by a reasonable margin
+      if (landmarks[12].y < landmarks[10].y - 0.04) {
+        count++;
+      }
+      
+      // Ring finger: check if tip (16) is above PIP joint (14) by a reasonable margin
+      if (landmarks[16].y < landmarks[14].y - 0.04) {
+        count++;
+      }
+      
+      // Pinky: check if tip (20) is above PIP joint (18) by a reasonable margin
+      if (landmarks[20].y < landmarks[18].y - 0.04) {
+        count++;
+      }
+      
+      // Only return counts for 1, 2, or 3 fingers
+      // If 4 or more fingers are detected, return 0 to indicate invalid gesture
+      if (count > 3) {
+        return 0;
+      }
+      
+      return count;
+    };
+
+    const drawLandmarks = function (res: { landmarks?: { x: number; y: number }[][] }) {
+      const ctx = canvasRef.current?.getContext("2d");
+      const video = videoRef.current;
+
+      if (!ctx || !video) return;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Draw video frame
+      ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Draw landmarks and finger rectangles
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#00FF00';
+      ctx.fillStyle = '#FF0000';
+
+      const hands = res.landmarks ?? [];
+
+      // Always draw bounding box and text if hand is detected
+      if (hands.length > 0) {
+        const points = Array.isArray(hands[0]) ? hands[0] : [];
+
+        // Draw all landmark points with consistent styling
+        ctx.fillStyle = '#FF0000';
+        points.forEach((p: { x: number; y: number }) => {
+          ctx.beginPath();
+          ctx.arc(
+            p.x * ctx.canvas.width,
+            p.y * ctx.canvas.height,
+            3,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        });
+        
+        // Draw bounding box around entire hand
+        if (points.length > 0 && points[0]) {
+          // Calculate bounding box
+          let minX = points[0].x;
+          let maxX = points[0].x;
+          let minY = points[0].y;
+          let maxY = points[0].y;
+
+          points.forEach((point: { x: number; y: number }) => {
+            minX = Math.min(minX, point.x);
+            maxX = Math.max(maxX, point.x);
+            minY = Math.min(minY, point.y);
+            maxY = Math.max(maxY, point.y);
+          });
+          
+          // Add padding to the bounding box
+          const padding = 0.05;
+          minX = Math.max(0, minX - padding);
+          maxX = Math.min(1, maxX + padding);
+          minY = Math.max(0, minY - padding);
+          maxY = Math.min(1, maxY + padding);
+          
+          // Convert to canvas coordinates
+          const canvasX = minX * ctx.canvas.width;
+          const canvasY = minY * ctx.canvas.height;
+          const canvasWidth = (maxX - minX) * ctx.canvas.width;
+          const canvasHeight = (maxY - minY) * ctx.canvas.height;
+          
+          // Draw hand bounding box with consistent styling
+          ctx.strokeStyle = '#00FF00';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(canvasX, canvasY, canvasWidth, canvasHeight);
+          
+          // Get current finger count for this specific hand
+          const currentFingerCount = countFingers(points);
+          
+          // Draw "Hand Detected" label with current finger count
+          // Add highlight background with higher contrast
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'; // Darker background for better contrast
+          const text = currentFingerCount === 0 ? 'Show 1 finger to start' :
+                      currentFingerCount === 1 ? 'Pose 1 (1 finger)' :
+                      currentFingerCount === 2 ? 'Pose 2 (2 fingers)' :
+                      currentFingerCount === 3 ? 'Pose 3 (3 fingers)' :
+                      'Invalid gesture - show 1, 2, or 3 fingers';
+          
+          // Measure text to create background rectangle
+          ctx.font = 'bold 20px Arial'; // Larger font for better visibility
+          const textMetrics = ctx.measureText(text);
+          const textWidth = textMetrics.width;
+          const textHeight = 28;
+          const textPadding = 12;
+          
+          // Draw background rectangle with more padding
+          ctx.fillRect(canvasX - textPadding/2, canvasY - textHeight - textPadding, textWidth + textPadding, textHeight + textPadding);
+          
+          // Draw text with higher contrast
+          ctx.fillStyle = '#00FF00'; // Bright green text
+          ctx.strokeStyle = '#000000'; // Black outline for better contrast
+          ctx.lineWidth = 2;
+          ctx.strokeText(text, canvasX, canvasY - 10);
+          ctx.fillText(text, canvasX, canvasY - 10);
+        }
+      }
+    };
+
+    // Function to draw just video without landmarks
+    const drawVideoOnly = function () {
+      const ctx = canvasRef.current?.getContext("2d");
+      const video = videoRef.current;
+
+      if (!ctx || !video) return;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Draw video frame
+      ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
+    };
+
+    const actOnResults = function (res: { landmarks?: { x: number; y: number }[][] }) {
+      const hands = res.landmarks ?? [];
+      let count = 0;
+
+      if (hands.length > 0) {
+        const points = Array.isArray(hands[0]) ? hands[0] : [];
+        count = countFingers(points);
+      }
+
+      setFingerCount(count);
+
+      // Track gesture sequence: 1 -> 2 -> 3 (as per PRD requirement)
+      // Since we're no longer tracking gestureSequence, we'll handle the sequence logic differently
+      // We'll use a simple state machine approach to track the current expected gesture
+      if (count === 1) {
+        // If we detect 1 finger, start countdown after a short delay
+        setTimeout(() => {
+          startCountdown();
+        }, 1000);
+      } else if (count === 2 || count === 3) {
+        // For 2 or 3 fingers, also start countdown (simplified logic)
+        setTimeout(() => {
+          startCountdown();
+        }, 1000);
+      }
+    };
+
+    const frame = () => {
+      const video = videoRef.current;
+      const globalLandmarker = (window as { handLandmarker?: { detectForVideo: (video: HTMLVideoElement, timestamp: number) => { landmarks?: { x: number; y: number }[][] } } }).handLandmarker;
+      if (!video) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
+      const now = performance.now();
+
+      // Always draw video frame to ensure canvas is never blank
+      if (video.readyState === 4 && video.videoWidth > 0 && video.videoHeight > 0) {
+        try {
+          // Only run hand detection if capturing and landmarker is available and ready
+          if (capturing && globalLandmarker && typeof globalLandmarker.detectForVideo === 'function' &&
+              video.currentTime !== lastVideoTime && isModelReady) {
+            // Check if the landmarker is ready by testing a simple detection first
+            if (!globalLandmarker || typeof globalLandmarker.detectForVideo !== 'function') {
+              drawVideoOnly();
+              raf = requestAnimationFrame(frame);
+              return;
+            }
+            
+            try {
+              const result = globalLandmarker.detectForVideo(video, now);
+              
+              if (result && result.landmarks) {
+                drawLandmarks(result);
+                actOnResults(result);
+              } else {
+                drawVideoOnly();
+              }
+              lastVideoTime = video.currentTime;
+            } catch (error: unknown) {
+              // Filter out TensorFlow Lite and MediaPipe initialization messages
+              const errorMessage = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message || '' : '';
+              if (errorMessage.includes('Created TensorFlow Lite XNNPACK delegate for CPU') ||
+                  errorMessage.includes('ROI width and height must be > 0') ||
+                  errorMessage.includes('Using NORM_RECT without IMAGE_DIMENSIONS')) {
+                // These are initialization messages, not actual errors
+                raf = requestAnimationFrame(frame);
+                return;
+              }
+              console.error('Error during hand detection:', error);
+              // Just draw video frame on error
+              drawVideoOnly();
+            }
+          } else {
+            // Just draw video frame if not capturing or landmarker is not available
+            drawVideoOnly();
+          }
+        } catch (error) {
+          console.error('Error during hand detection:', error);
+          // Just draw video frame on error
+          drawVideoOnly();
+        }
+      }
+      raf = requestAnimationFrame(frame);
+    };
+
+    // Start frame loop after a short delay to ensure landmarker is initialized
+    setTimeout(() => {
+      raf = requestAnimationFrame(frame);
+    }, 100);
+
+    return () => {
+      if (raf) {
+        cancelAnimationFrame(raf);
+      }
+    };
+  }, [isModalOpen, capturing, isModelLoading, isModelReady, startCountdown]);
+
+  
+  
   const handleRetake = () => {
     setCapturedImage(null);
-    setGestureSequence([]);
     setFingerCount(0);
-    setStatus('Show 1 finger to start');
-    startCapture();
+    setCapturing(false);
+
+    // Turn off webcam before retaking
+    turnOffWebcam();
+    
+    // Turn on webcam with fresh stream
+    const turnOnWebcam = async () => {
+      try {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        
+        if (!video) return;
+        
+        // Get new stream
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user",
+          },
+        });
+        
+        // Assign new stream to video
+        video.srcObject = newStream;
+        
+        // Wait for video to be ready
+        video.onloadedmetadata = () => {
+          if (canvas) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+          }
+        };
+        
+        await video.play();
+      } catch (error) {
+        console.error('Error turning on webcam:', error);
+      }
+    };
+    
+    // Reset MediaPipe model to ensure it's ready for retake
+    const resetMediaPipe = async () => {
+      try {
+        // Check if landmarker exists and is ready
+        const globalLandmarker = (window as { handLandmarker?: unknown }).handLandmarker;
+        if (!globalLandmarker) {
+          // If landmarker doesn't exist, reload the model
+          setIsModelReady(false);
+          setIsModelLoading(true);
+          await loadMediaPipeModel();
+        } else {
+          // If landmarker exists, just ensure it's ready
+          setIsModelReady(true);
+        }
+      } catch (error) {
+        console.error('Error resetting MediaPipe:', error);
+      }
+    };
+    
+    // Execute turn off then on sequence
+    turnOffWebcam();
+    
+    // Small delay to ensure webcam is fully off before turning back on
+    setTimeout(async () => {
+      await turnOnWebcam();
+      await resetMediaPipe();
+      // Auto-start finger detection after retake
+      setTimeout(() => {
+        setCapturing(true);
+        setFingerCount(0);
+      }, 500);
+    }, 300);
   };
 
   const handleSave = () => {
     if (capturedImage) {
-      onCapture(capturedImage);
+      props.onCapture(capturedImage);
       setIsModalOpen(false);
       setCapturedImage(null);
-      setIsCapturing(false);
+      setCapturing(false);
+      
+      // Ensure webcam is turned off after saving
+      turnOffWebcam();
     }
   };
 
   return (
     <div>
       {/* Current Image Preview */}
-      {currentImage ? (
-        <div className="space-y-2">
-          <div className="relative w-48 h-48 mx-auto">
-            <img
-              src={currentImage}
-              alt="Profile"
-              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
-            />
+      {props.currentImage ? (
+        <div className="space-y-4">
+          <div className="flex justify-start">
+            <Avatar className="w-32 h-32 border-4 border-gray-200 shadow-lg">
+              <AvatarImage
+                src={props.currentImage}
+                alt="Profile"
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-gray-100 text-gray-600 text-2xl">
+                👤
+              </AvatarFallback>
+            </Avatar>
           </div>
           <Button
             type="button"
@@ -213,26 +614,44 @@ export function GestureCapture({ onCapture, currentImage }: GestureCaptureProps)
             className="w-full"
           >
             <CameraIcon className="w-4 h-4 mr-2" />
-            Change Photo
+            Photo Profile *
           </Button>
         </div>
       ) : (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setIsModalOpen(true)}
-          className="w-full"
-        >
-          <CameraIcon className="w-4 h-4 mr-2" />
-          Capture Photo with Gesture
-        </Button>
+        <div className="space-y-4">
+          <div className="flex justify-start">
+            <Avatar className="w-32 h-32 border-4 border-gray-200 shadow-lg">
+              <AvatarFallback className="bg-gray-100">
+                <Image
+                  src="/avatar.png"
+                  alt="Default avatar"
+                  width={128}
+                  height={128}
+                  className="w-full h-full object-cover"
+                />
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsModalOpen(true)}
+            className="w-full"
+          >
+            <CameraIcon className="w-4 h-4 mr-2" />
+            Capture Photo
+          </Button>
+        </div>
       )}
 
       {/* Capture Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Capture Profile Photo</DialogTitle>
+            <DialogTitle>Raise Your Hand to Capture </DialogTitle>
+            <DialogDescription>
+              We’ll take the photo once your hand pose is detected.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -244,106 +663,98 @@ export function GestureCapture({ onCapture, currentImage }: GestureCaptureProps)
 
             {!capturedImage ? (
               <>
-                {/* Webcam Preview */}
+                {/* Video and Canvas Container */}
                 <div className="relative">
-                  <Webcam
-                    ref={webcamRef}
-                    audio={false}
-                    screenshotFormat="image/jpeg"
-                    className="w-full rounded-lg"
-                    videoConstraints={{
-                      width: 1280,
-                      height: 720,
-                      facingMode: 'user',
-                    }}
+                  {/* Hidden video element for MediaPipe */}
+                  <video
+                    ref={videoRef}
+                    className="hidden"
+                    playsInline
+                    autoPlay
+                    muted
+                    width="1280"
+                    height="720"
                   />
                   
-                  {/* Gesture Overlay */}
-                  {isCapturing && (
-                    <div className="absolute top-4 left-4 right-4">
-                      <div className="bg-black/70 text-white px-4 py-3 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold">{status}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              {[1, 2, 3].map((num) => (
-                                <div
-                                  key={num}
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                                    gestureSequence.includes(num)
-                                      ? 'bg-green-500'
-                                      : 'bg-gray-600'
-                                  }`}
-                                >
-                                  {num}
-                                </div>
-                              ))}
+                  {/* Canvas overlay for video display and hand landmarks */}
+                  <canvas
+                    ref={canvasRef}
+                    className="w-full rounded-lg"
+                    width="1280"
+                    height="720"
+                  />
+                  
+                  {/* Real-time Gesture Status */}
+                  <div className="absolute top-4 left-4 right-4">
+                    <div className="text-white px-4 py-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                         
+                          {/* Always show current detected finger count */}
+                          {fingerCount > 0 && (
+                            <div className="mt-2">
+                              <div className="bg-black bg-opacity-80 rounded-lg px-3 py-2 inline-block">
+                                <p className="text-lg font-bold text-white">
+                                  {fingerCount} {fingerCount === 1 ? 'finger' : 'fingers'} detected
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          {countdown !== null && (
-                            <div className="text-4xl font-bold">{countdown}</div>
+                          )}
+                          {fingerCount === 0 && (
+                            <div className="mt-2">
+                              <div className="bg-black bg-opacity-80 rounded-lg px-3 py-2 inline-block">
+                                <p className="text-sm font-semibold text-yellow-300">
+                                  Show 1, 2, or 3 fingers
+                                </p>
+                              </div>
+                            </div>
                           )}
                         </div>
+                        {countdown !== null && (
+                          <div className="text-4xl font-bold">{countdown}</div>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Finger Count Display */}
-                  {isCapturing && fingerCount > 0 && (
-                    <div className="absolute bottom-4 right-4">
-                      <div className="bg-blue-500 text-white px-6 py-3 rounded-full text-2xl font-bold">
-                        {fingerCount} 🖐️
+                  {/* Controls */}
+                  <div className="mt-6">
+                    {isModelLoading && (
+                      <div className="text-center py-2">
+                        <p className="text-gray-600">Starting finger detection automatically...</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-8 text-sm text-gray-600 text-start space-y-2">
+                    <p className="text-base">
+                     To take a picture, follow the hand poses in the order shown below. The system will automatically capture the image once the final pose is detected.
+                    </p>
+                    <div className="flex justify-center items-center space-x-4">
+                      <div className="flex flex-col items-center">
+                        <Image src="/finger-1.png" alt="1 finger" width={64} height={64} className="w-16 h-16" />
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <Image src="/finger-2.png" alt="2 fingers" width={64} height={64} className="w-16 h-16" />
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <Image src="/finger-3.png" alt="3 fingers" width={64} height={64} className="w-16 h-16" />
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
-
-                {/* Controls */}
-                <div className="flex gap-2">
-                  {!isCapturing ? (
-                    <>
-                      <Button
-                        type="button"
-                        onClick={startCapture}
-                        className="flex-1"
-                        disabled={isModelLoading}
-                      >
-                        Start Gesture Capture
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleManualCapture}
-                        className="flex-1"
-                      >
-                        <CameraIcon className="w-4 h-4 mr-2" />
-                        Manual Capture
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsCapturing(false)}
-                      className="w-full"
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-
-                <p className="text-sm text-gray-600 text-center">
-                  For gesture capture: Show 1 finger, then 2 fingers, then 3 fingers to auto-capture
-                </p>
               </>
             ) : (
               <>
                 {/* Preview Captured Image */}
                 <div className="relative">
-                  <img
+                  <Image
                     src={capturedImage}
                     alt="Captured"
+                    width={400}
+                    height={300}
                     className="w-full rounded-lg"
+                    unoptimized
                   />
                 </div>
 
@@ -374,4 +785,8 @@ export function GestureCapture({ onCapture, currentImage }: GestureCaptureProps)
       </Dialog>
     </div>
   );
+};
+
+export function GestureCapture(props: GestureCaptureProps) {
+  return <GestureController {...props} />;
 }

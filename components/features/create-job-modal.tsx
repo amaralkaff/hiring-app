@@ -29,6 +29,7 @@ interface CreateJobModalProps {
 
 interface JobFormData {
   title: string;
+  department: string;
   description: string;
   salary_min: string;
   salary_max: string;
@@ -139,6 +140,7 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
   
   const isFormValid = !!(
     watchAllFields.title &&
+    watchAllFields.department &&
     statusValue &&
     watchAllFields.description &&
     watchAllFields.salary_min &&
@@ -178,6 +180,7 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
       id: jobId,
       slug,
       title: data.title,
+      department: data.department,
       description: data.description,
       status: data.status,
       salary_range: {
@@ -188,7 +191,7 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
       },
       list_card: {
         badge: data.status.charAt(0).toUpperCase() + data.status.slice(1),
-        started_on_text: `created on ${new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+        started_on_text: `started on ${new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}`,
         cta: 'Manage Job',
       },
       application_form: {
@@ -253,6 +256,25 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
               )}
             />
             {errors.title && <p className="text-s-regular text-danger-main mt-2">{errors.title.message}</p>}
+          </div>
+
+          {/* Department */}
+          <div className="space-y-2">
+            <label className="text-s-regular text-neutral-100 block">
+              Department<span className="text-danger-main">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Ex. Engineering"
+              {...register('department', { required: 'Department is required' })}
+              className={cn(
+                "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
+                errors.department
+                  ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"
+                  : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
+              )}
+            />
+            {errors.department && <p className="text-s-regular text-danger-main mt-2">{errors.department.message}</p>}
           </div>
 
           {/* Job Status */}

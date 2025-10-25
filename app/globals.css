@@ -215,6 +215,30 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+  
+  /* Custom Scrollbar Styles */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #01959F #E0E0E0;
+  }
+  
+  *::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  *::-webkit-scrollbar-track {
+    background: #E0E0E0;
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    background: #01959F;
+    border-radius: 6px;
+  }
+  
+  *::-webkit-scrollbar-thumb:hover {
+    background: #01777F;
+  }
 }
 
 @layer utilities {

@@ -1,45 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
-import candidatesData from '@/data/mock-candidates.json';
-import type { Candidate } from '@/lib/types';
+import { createClient } from '@/utils/supabase/server';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
-  const { jobId } = await params;
-  
-  // Filter candidates by job_id
-  const candidates = (candidatesData as Candidate[]).filter(c => c.job_id === jobId);
+  try {
+    const { jobId } = await params;
+    
+    const supabase = await createClient();
+    
+    const { data: candidates, error } = await supabase
+      .from('candidates')
+      .select('*')
+      .eq('job_id', jobId)
+      .order('created_at', { ascending: false });
 
-  return NextResponse.json({ data: candidates });
+    if (error) {
+      console.error('Error fetching candidates:', error);
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch candidates' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ data: candidates || [] });
+  } catch (error) {
+    console.error('Error in candidates GET:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
-  const { jobId } = await params;
-  const body = await request.json();
+  try {
+    const { jobId } = await params;
+    const body = await request.json();
 
-  // Generate candidate ID
-  const candidateId = `cand_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
-  const candidate = {
-    id: candidateId,
-    job_id: jobId,
-    attributes: Object.entries(body).map(([key, value], index) => ({
-      key,
-      label: key.split('_').map(word => 
-        word.charAt(0).toUpperCase() + word.slice(1)
-      ).join(' '),
-      value: value as string,
-      order: index + 1
-    })),
-    created_at: new Date().toISOString()
-  };
+    // Generate candidate ID
+    const candidateId = `cand_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const candidate = {
+      id: candidateId,
+      job_id: jobId,
+      attributes: Object.entries(body).map(([key, value], index) => ({
+        key,
+        label: key.split('_').map(word =>
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' '),
+        value: value as string,
+        order: index + 1
+      }))
+    };
 
-  return NextResponse.json({ 
-    success: true,
-    data: candidate 
-  });
+    const supabase = await createClient();
+    
+    const { data, error } = await supabase
+      .from('candidates')
+      .insert([candidate])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating candidate:', error);
+      return NextResponse.json(
+        { success: false, error: 'Failed to create candidate' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: data
+    });
+  } catch (error) {
+    console.error('Error in candidates POST:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }

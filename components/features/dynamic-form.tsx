@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -14,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { GestureCapture } from '@/components/features/gesture-capture';
+import { cn } from '@/lib/utils';
 import type { Job, ApplicationFormData } from '@/lib/types';
 
 interface DynamicApplicationFormProps {
@@ -23,18 +22,18 @@ interface DynamicApplicationFormProps {
 export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-
+  
   const fields = job.application_form?.sections[0].fields || [];
 
   // Build validation rules dynamically
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const validationRules: Record<string, any> = {};
   fields.forEach((field) => {
     if (field.validation.required) {
       validationRules[field.key] = {
         required: `${field.key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} is required`,
       };
-      
+
       // Add specific validations
       if (field.key === 'email') {
         validationRules[field.key].pattern = {
@@ -42,18 +41,18 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
           message: 'Invalid email address',
         };
       }
-      
+
       if (field.key === 'linkedin_link') {
         validationRules[field.key].pattern = {
           value: /^https?:\/\/(www\.)?linkedin\.com\/.+$/i,
           message: 'Please enter a valid LinkedIn URL',
         };
       }
-      
+
       if (field.key === 'phone_number') {
         validationRules[field.key].pattern = {
-          value: /^[+]?[\d\s-()]+$/,
-          message: 'Please enter a valid phone number',
+          value: /^[+]?[1-9]\d{1,14}$/,
+          message: 'Please enter a valid phone number (e.g., +628123456789)',
         };
       }
     }
@@ -70,17 +69,17 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
   // Use useWatch instead of watch for React 19.2 compatibility
   const photoProfile = useWatch({ control, name: 'photo_profile' });
 
+  // Watch all fields that might need conditional rendering
+  // This ensures hooks are always called in the same order
+  const domicileValue = useWatch({ control, name: 'domicile' });
+  
   const getFieldLabel = (key: string) => {
-    return key.split('_').map(word => 
+    return key.split('_').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
 
-  const isFieldRequired = (key: string) => {
-    const field = fields.find(f => f.key === key);
-    return field?.validation.required || false;
-  };
-
+  
   const onSubmit = async (data: ApplicationFormData) => {
     setIsSubmitting(true);
     try {
@@ -93,16 +92,15 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
 
       if (response.ok) {
         const result = await response.json();
-        
+
         // Also save to localStorage for persistence
         const existingApps = localStorage.getItem(`applications_${job.id}`);
         const apps = existingApps ? JSON.parse(existingApps) : [];
         apps.push(result.data);
         localStorage.setItem(`applications_${job.id}`, JSON.stringify(apps));
 
-        setShowSuccess(true);
         setTimeout(() => {
-          router.push('/jobs');
+          router.push('/success');
         }, 2000);
       }
     } catch (error) {
@@ -113,195 +111,277 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
     }
   };
 
-  if (showSuccess) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-6xl mb-4">✅</div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-          Application Submitted Successfully!
-        </h2>
-        <p className="text-gray-600 mb-4">
-          Thank you for applying. We'll review your application and get back to you soon.
-        </p>
-        <p className="text-sm text-gray-500">Redirecting to job listings...</p>
-      </div>
-    );
-  }
+  // Remove the success state handling from here since we now redirect to a separate page
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {fields.map((field) => {
+      {/* Required Fields Notice */}
+      <div className="text-start">
+        <p className="text-s-regular text-danger-main">* Required fields</p>
+      </div>
+
+      <div className="space-y-4">
+        {fields.map((field) => {
         const fieldKey = field.key as keyof ApplicationFormData;
         const isRequired = field.validation.required;
         const label = getFieldLabel(field.key);
 
-        // Full Name
-        if (field.key === 'full_name') {
-          return (
-            <div key={field.key}>
-              <Label htmlFor={field.key}>
-                {label} {isRequired && <span className="text-red-600">*</span>}
-              </Label>
-              <Input
-                id={field.key}
-                {...register(fieldKey, validationRules[field.key])}
-                placeholder="Enter your full name"
-              />
-              {errors[fieldKey] && (
-                <p className="text-sm text-red-600 mt-1">{errors[fieldKey]?.message}</p>
-              )}
-            </div>
-          );
-        }
-
-        // Photo Profile with Gesture Capture
+        // Photo Profile with Gesture Capture (1st)
         if (field.key === 'photo_profile') {
           return (
-            <div key={field.key}>
-              <Label>
-                {label} {isRequired && <span className="text-red-600">*</span>}
-              </Label>
-              <GestureCapture
-                onCapture={(imageData) => setValue('photo_profile', imageData)}
-                currentImage={photoProfile}
+            <div key={field.key} className="space-y-2">
+              <label className="text-s-regular text-neutral-100 block">
+                {label} {isRequired && <span className="text-danger-main ml-1">*</span>}
+              </label>
+              <div className="flex justify-start">
+                <div className="relative">
+                  <GestureCapture
+                    onCapture={(imageData) => setValue('photo_profile', imageData)}
+                    currentImage={photoProfile}
+                  />
+                </div>
+              </div>
+              {errors[fieldKey] && (
+                <p className="text-s-regular text-danger-main mt-2 text-center">{errors[fieldKey]?.message}</p>
+              )}
+            </div>
+          );
+        }
+
+        // Full Name (2nd)
+        if (field.key === 'full_name') {
+          return (
+            <div key={field.key} className="space-y-2">
+              <label className="text-s-regular text-neutral-100 block">
+                Full name{isRequired && <span className="text-danger-main ml-1">*</span>}
+              </label>
+              <input
+                id={field.key}
+                type="text"
+                {...register(fieldKey, validationRules[field.key])}
+                placeholder="Enter your full name"
+                className={cn(
+                  "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
+                  errors[fieldKey]
+                    ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"
+                    : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
+                )}
               />
               {errors[fieldKey] && (
-                <p className="text-sm text-red-600 mt-1">{errors[fieldKey]?.message}</p>
+                <p className="text-s-regular text-danger-main mt-2">{errors[fieldKey]?.message}</p>
               )}
             </div>
           );
         }
 
-        // Gender
-        if (field.key === 'gender') {
-          return (
-            <div key={field.key}>
-              <Label htmlFor={field.key}>
-                {label} {isRequired && <span className="text-red-600">*</span>}
-              </Label>
-              <select
-                id={field.key}
-                {...register(fieldKey, validationRules[field.key])}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-                <option value="Prefer not to say">Prefer not to say</option>
-              </select>
-              {errors[fieldKey] && (
-                <p className="text-sm text-red-600 mt-1">{errors[fieldKey]?.message}</p>
-              )}
-            </div>
-          );
-        }
-
-        // Email
-        if (field.key === 'email') {
-          return (
-            <div key={field.key}>
-              <Label htmlFor={field.key}>
-                {label} {isRequired && <span className="text-red-600">*</span>}
-              </Label>
-              <Input
-                id={field.key}
-                type="email"
-                {...register(fieldKey, validationRules[field.key])}
-                placeholder="your.email@example.com"
-              />
-              {errors[fieldKey] && (
-                <p className="text-sm text-red-600 mt-1">{errors[fieldKey]?.message}</p>
-              )}
-            </div>
-          );
-        }
-
-        // Phone Number
-        if (field.key === 'phone_number') {
-          return (
-            <div key={field.key}>
-              <Label htmlFor={field.key}>
-                {label} {isRequired && <span className="text-red-600">*</span>}
-              </Label>
-              <Input
-                id={field.key}
-                type="tel"
-                {...register(fieldKey, validationRules[field.key])}
-                placeholder="+62 812-1234-5678"
-              />
-              {errors[fieldKey] && (
-                <p className="text-sm text-red-600 mt-1">{errors[fieldKey]?.message}</p>
-              )}
-            </div>
-          );
-        }
-
-        // LinkedIn Link
-        if (field.key === 'linkedin_link') {
-          return (
-            <div key={field.key}>
-              <Label htmlFor={field.key}>
-                {label} {isRequired && <span className="text-red-600">*</span>}
-              </Label>
-              <Input
-                id={field.key}
-                type="url"
-                {...register(fieldKey, validationRules[field.key])}
-                placeholder="https://linkedin.com/in/yourprofile"
-              />
-              {errors[fieldKey] && (
-                <p className="text-sm text-red-600 mt-1">{errors[fieldKey]?.message}</p>
-              )}
-            </div>
-          );
-        }
-
-        // Date of Birth
+        // Date of Birth (3rd)
         if (field.key === 'date_of_birth') {
           return (
-            <div key={field.key}>
-              <Label htmlFor={field.key}>
-                {label} {isRequired && <span className="text-red-600">*</span>}
-              </Label>
-              <Input
+            <div key={field.key} className="space-y-2">
+              <label className="text-s-regular text-neutral-100 block">
+                Date of birth{isRequired && <span className="text-danger-main">*</span>}
+              </label>
+              <input
                 id={field.key}
                 type="date"
                 {...register(fieldKey, validationRules[field.key])}
+                className={cn(
+                  "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
+                  errors[fieldKey]
+                    ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"
+                    : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
+                )}
               />
               {errors[fieldKey] && (
-                <p className="text-sm text-red-600 mt-1">{errors[fieldKey]?.message}</p>
+                <p className="text-s-regular text-danger-main mt-2">{errors[fieldKey]?.message}</p>
               )}
             </div>
           );
         }
 
-        // Default (Domicile and other text fields)
+        // Gender (4th)
+        if (field.key === 'gender') {
+          return (
+            <div key={field.key} className="space-y-2">
+              <label className="text-s-regular text-neutral-100 block">
+                Pronoun (gender){isRequired && <span className="text-danger-main">*</span>}
+              </label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="Female"
+                    {...register(fieldKey, validationRules[field.key])}
+                    className="w-5 h-5 text-primary-main accent-primary-main"
+                  />
+                  <span className="text-m-regular text-neutral-100">She/her (Female)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="Male"
+                    {...register(fieldKey, validationRules[field.key])}
+                    className="w-5 h-5 text-primary-main accent-primary-main"
+                  />
+                  <span className="text-m-regular text-neutral-100">He/him (Male)</span>
+                </label>
+              </div>
+              {errors[fieldKey] && (
+                <p className="text-s-regular text-danger-main mt-2">{errors[fieldKey]?.message}</p>
+              )}
+            </div>
+          );
+        }
+
+        // Domicile (5th)
+        if (field.key === 'domicile') {
+          return (
+            <div key={field.key} className="space-y-2">
+              <label className="text-s-regular text-neutral-100 block">
+                Domicile{isRequired && <span className="text-danger-main">*</span>}
+              </label>
+              <Select
+                value={domicileValue}
+                onValueChange={(value) => setValue(fieldKey, value)}
+              >
+                <SelectTrigger className={cn(
+                  "h-12 border-2",
+                  errors[fieldKey] ? "border-danger-main focus:border-danger-main focus:ring-danger-focus" : "border-neutral-40 focus:border-primary-main focus:ring-primary-focus"
+                )}>
+                  <SelectValue placeholder="Choose your domicile" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Jakarta">Jakarta</SelectItem>
+                  <SelectItem value="Bandung">Bandung</SelectItem>
+                  <SelectItem value="Surabaya">Surabaya</SelectItem>
+                  <SelectItem value="Yogyakarta">Yogyakarta</SelectItem>
+                  <SelectItem value="Bali">Bali</SelectItem>
+                  <SelectItem value="Medan">Medan</SelectItem>
+                </SelectContent>
+              </Select>
+              {/* Hidden input for react-hook-form validation */}
+              <input
+                type="hidden"
+                {...register(fieldKey, validationRules[field.key])}
+              />
+              {errors[fieldKey] && (
+                <p className="text-s-regular text-danger-main mt-2">{errors[fieldKey]?.message}</p>
+              )}
+            </div>
+          );
+        }
+
+        // Phone Number (6th)
+        if (field.key === 'phone_number') {
+          return (
+            <div key={field.key} className="space-y-2">
+              <label className="text-s-regular text-neutral-100 block">
+                Phone number{isRequired && <span className="text-danger-main ml-1">*</span>}
+              </label>
+              <input
+                id={field.key}
+                type="tel"
+                {...register(fieldKey, validationRules[field.key])}
+                placeholder="+6281XXXXXXXXX"
+                className={cn(
+                  "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
+                  errors[fieldKey]
+                    ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"
+                    : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
+                )}
+              />
+              {errors[fieldKey] && (
+                <p className="text-s-regular text-danger-main mt-2">{errors[fieldKey]?.message}</p>
+              )}
+            </div>
+          );
+        }
+
+        // Email (7th)
+        if (field.key === 'email') {
+          return (
+            <div key={field.key} className="space-y-2">
+              <label className="text-s-regular text-neutral-100 block">
+                Email{isRequired && <span className="text-danger-main ml-1">*</span>}
+              </label>
+              <input
+                id={field.key}
+                type="email"
+                {...register(fieldKey, validationRules[field.key])}
+                placeholder="Enter your email address"
+                className={cn(
+                  "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
+                  errors[fieldKey]
+                    ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"
+                    : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
+                )}
+              />
+              {errors[fieldKey] && (
+                <p className="text-s-regular text-danger-main mt-2">{errors[fieldKey]?.message}</p>
+              )}
+            </div>
+          );
+        }
+
+        // LinkedIn Link (8th)
+        if (field.key === 'linkedin_link') {
+          return (
+            <div key={field.key} className="space-y-2">
+              <label className="text-s-regular text-neutral-100 block">
+                Link Linkedin{isRequired && <span className="text-danger-main">*</span>}
+              </label>
+              <input
+                id={field.key}
+                type="url"
+                {...register(fieldKey, validationRules[field.key])}
+                placeholder="https://linkedin.com/in/username"
+                className={cn(
+                  "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
+                  errors[fieldKey]
+                    ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"
+                    : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
+                )}
+              />
+              {errors[fieldKey] && (
+                <p className="text-s-regular text-danger-main mt-2">{errors[fieldKey]?.message}</p>
+              )}
+            </div>
+          );
+        }
+
+        // Default (other text fields)
         return (
-          <div key={field.key}>
-            <Label htmlFor={field.key}>
-              {label} {isRequired && <span className="text-red-600">*</span>}
-            </Label>
-            <Input
+          <div key={field.key} className="space-y-2">
+            <label className="text-s-regular text-neutral-100 block">
+              {label} {isRequired && <span className="text-danger-main">*</span>}
+            </label>
+            <input
               id={field.key}
+              type="text"
               {...register(fieldKey, validationRules[field.key])}
               placeholder={`Enter your ${label.toLowerCase()}`}
+              className={cn(
+                "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
+                errors[fieldKey]
+                  ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"
+                  : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
+              )}
             />
             {errors[fieldKey] && (
-              <p className="text-sm text-red-600 mt-1">{errors[fieldKey]?.message}</p>
+              <p className="text-s-regular text-danger-main mt-2">{errors[fieldKey]?.message}</p>
             )}
           </div>
         );
-      })}
+        })}
+      </div>
 
-      <div className="pt-6 border-t">
-        <Button 
-          type="submit" 
-          size="lg" 
-          className="w-full"
+      <div className="pt-6">
+        <Button
+          type="submit"
           disabled={isSubmitting}
+          className="w-full h-10 bg-[#01959F] hover:bg-[#017a84] text-white font-semibold rounded-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'Submitting...' : 'Submit Application'}
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </Button>
       </div>
     </form>

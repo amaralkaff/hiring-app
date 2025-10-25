@@ -1,19 +1,20 @@
 [
   {
-    "id": "job_1761255516906_uytoyf8r9",
-    "slug": "frontend",
-    "title": "Frontend",
-    "description": "• asd",
+    "id": "job_001",
+    "slug": "senior-frontend-developer",
+    "title": "Senior Frontend Developer",
+    "department": "Engineering",
+    "description": "• 5+ years experience with React/Next.js\n• Strong understanding of TypeScript\n• Experience with state management (Redux, Zustand)\n• Knowledge of modern CSS frameworks",
     "status": "active",
     "salary_range": {
-      "min": 1000000,
-      "max": 8000000,
+      "min": 15000000,
+      "max": 25000000,
       "currency": "IDR",
-      "display_text": "Rp1,000,000 - Rp8,000,000"
+      "display_text": "Rp15,000,000 - Rp25,000,000"
     },
     "list_card": {
       "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
+      "started_on_text": "started on Oct 15, 2025",
       "cta": "Manage Job"
     },
     "application_form": {
@@ -22,13 +23,19 @@
           "title": "Minimum Profile Information Required",
           "fields": [
             {
+              "key": "photo_profile",
+              "validation": {
+                "required": true
+              }
+            },
+            {
               "key": "full_name",
               "validation": {
                 "required": true
               }
             },
             {
-              "key": "photo_profile",
+              "key": "date_of_birth",
               "validation": {
                 "required": true
               }
@@ -42,7 +49,59 @@
             {
               "key": "domicile",
               "validation": {
-                "required": false
+                "required": true
+              }
+            },
+            {
+              "key": "phone_number",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "email",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "linkedin_link",
+              "validation": {
+                "required": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "job_002",
+    "slug": "backend-engineer",
+    "title": "Backend Engineer",
+    "department": "Engineering",
+    "description": "• Experience with Node.js, Python, or Go\n• Database design and optimization\n• RESTful API development\n• Microservices architecture",
+    "status": "active",
+    "salary_range": {
+      "min": 12000000,
+      "max": 22000000,
+      "currency": "IDR",
+      "display_text": "Rp12,000,000 - Rp22,000,000"
+    },
+    "list_card": {
+      "badge": "Active",
+      "started_on_text": "started on Oct 18, 2025",
+      "cta": "Manage Job"
+    },
+    "application_form": {
+      "sections": [
+        {
+          "title": "Minimum Profile Information Required",
+          "fields": [
+            {
+              "key": "full_name",
+              "validation": {
+                "required": true
               }
             },
             {
@@ -69,20 +128,21 @@
     }
   },
   {
-    "id": "job_1761255678252_mn6qzvm9g",
-    "slug": "asd",
-    "title": "asd",
-    "description": "• asd",
+    "id": "job_003",
+    "slug": "ui-ux-designer",
+    "title": "UI/UX Designer",
+    "department": "Design",
+    "description": "• 3+ years in product design\n• Proficient in Figma and Adobe XD\n• User research and testing experience\n• Portfolio required",
     "status": "active",
     "salary_range": {
-      "min": 1000000,
-      "max": 8000000,
+      "min": 10000000,
+      "max": 18000000,
       "currency": "IDR",
-      "display_text": "Rp1,000,000 - Rp8,000,000"
+      "display_text": "Rp10,000,000 - Rp18,000,000"
     },
     "list_card": {
       "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
+      "started_on_text": "started on Oct 20, 2025",
       "cta": "Manage Job"
     },
     "application_form": {
@@ -97,21 +157,55 @@
               }
             },
             {
-              "key": "photo_profile",
+              "key": "email",
               "validation": {
                 "required": true
               }
             },
             {
-              "key": "gender",
+              "key": "phone_number",
               "validation": {
                 "required": true
               }
             },
             {
-              "key": "domicile",
+              "key": "portfolio_link",
               "validation": {
-                "required": false
+                "required": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "job_004",
+    "slug": "product-manager",
+    "title": "Product Manager",
+    "department": "Product",
+    "description": "• 4+ years in product management\n• Agile/Scrum methodology\n• Data-driven decision making\n• Stakeholder management",
+    "status": "active",
+    "salary_range": {
+      "min": 18000000,
+      "max": 30000000,
+      "currency": "IDR",
+      "display_text": "Rp18,000,000 - Rp30,000,000"
+    },
+    "list_card": {
+      "badge": "Active",
+      "started_on_text": "started on Oct 22, 2025",
+      "cta": "Manage Job"
+    },
+    "application_form": {
+      "sections": [
+        {
+          "title": "Minimum Profile Information Required",
+          "fields": [
+            {
+              "key": "full_name",
+              "validation": {
+                "required": true
               }
             },
             {
@@ -138,20 +232,177 @@
     }
   },
   {
-    "id": "job_1761255774016_5bmc2ve6c",
-    "slug": "asd",
-    "title": "asd",
-    "description": "• asd",
+    "id": "job_005",
+    "slug": "devops-engineer",
+    "title": "DevOps Engineer",
+    "department": "Engineering",
+    "description": "• CI/CD pipeline expertise\n• Docker and Kubernetes\n• AWS/GCP/Azure experience\n• Infrastructure as Code (Terraform)",
+    "status": "active",
+    "salary_range": {
+      "min": 14000000,
+      "max": 24000000,
+      "currency": "IDR",
+      "display_text": "Rp14,000,000 - Rp24,000,000"
+    },
+    "list_card": {
+      "badge": "Active",
+      "started_on_text": "started on Oct 23, 2025",
+      "cta": "Manage Job"
+    },
+    "application_form": {
+      "sections": [
+        {
+          "title": "Minimum Profile Information Required",
+          "fields": [
+            {
+              "key": "full_name",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "email",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "phone_number",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "linkedin_link",
+              "validation": {
+                "required": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "job_006",
+    "slug": "data-analyst",
+    "title": "Data Analyst",
+    "department": "Data",
+    "description": "• SQL and Python proficiency\n• Data visualization (Tableau, Power BI)\n• Statistical analysis\n• Business intelligence",
+    "status": "active",
+    "salary_range": {
+      "min": 9000000,
+      "max": 16000000,
+      "currency": "IDR",
+      "display_text": "Rp9,000,000 - Rp16,000,000"
+    },
+    "list_card": {
+      "badge": "Active",
+      "started_on_text": "started on Oct 24, 2025",
+      "cta": "Manage Job"
+    },
+    "application_form": {
+      "sections": [
+        {
+          "title": "Minimum Profile Information Required",
+          "fields": [
+            {
+              "key": "full_name",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "email",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "phone_number",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "linkedin_link",
+              "validation": {
+                "required": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "job_007",
+    "slug": "mobile-developer",
+    "title": "Mobile Developer",
+    "department": "Engineering",
+    "description": "• React Native or Flutter experience\n• iOS and Android development\n• API integration\n• App store deployment",
+    "status": "active",
+    "salary_range": {
+      "min": 13000000,
+      "max": 23000000,
+      "currency": "IDR",
+      "display_text": "Rp13,000,000 - Rp23,000,000"
+    },
+    "list_card": {
+      "badge": "Active",
+      "started_on_text": "started on Oct 25, 2025",
+      "cta": "Manage Job"
+    },
+    "application_form": {
+      "sections": [
+        {
+          "title": "Minimum Profile Information Required",
+          "fields": [
+            {
+              "key": "full_name",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "email",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "phone_number",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "linkedin_link",
+              "validation": {
+                "required": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "job_008",
+    "slug": "qa-engineer",
+    "title": "QA Engineer",
+    "department": "Quality Assurance",
+    "description": "• Manual and automated testing\n• Selenium, Cypress, or Playwright\n• Test case design\n• Bug tracking and reporting",
     "status": "inactive",
     "salary_range": {
-      "min": 1000000,
-      "max": 8000000,
+      "min": 8000000,
+      "max": 14000000,
       "currency": "IDR",
-      "display_text": "Rp1,000,000 - Rp8,000,000"
+      "display_text": "Rp8,000,000 - Rp14,000,000"
     },
     "list_card": {
       "badge": "Inactive",
-      "started_on_text": "created on Oct 24, 2025",
+      "started_on_text": "started on Oct 10, 2025",
       "cta": "Manage Job"
     },
     "application_form": {
@@ -163,24 +414,6 @@
               "key": "full_name",
               "validation": {
                 "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
               }
             },
             {
@@ -207,20 +440,73 @@
     }
   },
   {
-    "id": "job_1761255874501_wqanflelr",
-    "slug": "asd",
-    "title": "asd",
-    "description": "• asd",
+    "id": "job_009",
+    "slug": "content-writer",
+    "title": "Content Writer",
+    "department": "Marketing",
+    "description": "• Excellent writing skills\n• SEO knowledge\n• Content strategy\n• Research abilities",
+    "status": "active",
+    "salary_range": {
+      "min": 6000000,
+      "max": 12000000,
+      "currency": "IDR",
+      "display_text": "Rp6,000,000 - Rp12,000,000"
+    },
+    "list_card": {
+      "badge": "Active",
+      "started_on_text": "started on Oct 26, 2025",
+      "cta": "Manage Job"
+    },
+    "application_form": {
+      "sections": [
+        {
+          "title": "Minimum Profile Information Required",
+          "fields": [
+            {
+              "key": "full_name",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "email",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "phone_number",
+              "validation": {
+                "required": true
+              }
+            },
+            {
+              "key": "portfolio_link",
+              "validation": {
+                "required": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "job_010",
+    "slug": "digital-marketing-specialist",
+    "title": "Digital Marketing Specialist",
+    "department": "Marketing",
+    "description": "• Social media marketing\n• Google Ads and Facebook Ads\n• Analytics and reporting\n• Campaign management",
     "status": "inactive",
     "salary_range": {
-      "min": 1000000,
-      "max": 8000000,
+      "min": 7000000,
+      "max": 13000000,
       "currency": "IDR",
-      "display_text": "Rp1,000,000 - Rp8,000,000"
+      "display_text": "Rp7,000,000 - Rp13,000,000"
     },
     "list_card": {
       "badge": "Inactive",
-      "started_on_text": "created on Oct 24, 2025",
+      "started_on_text": "started on Oct 12, 2025",
       "cta": "Manage Job"
     },
     "application_form": {
@@ -232,1404 +518,6 @@
               "key": "full_name",
               "validation": {
                 "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256180241_mpxdz0n30",
-    "slug": "asd",
-    "title": "asd",
-    "description": "• asd",
-    "status": "inactive",
-    "salary_range": {
-      "min": 1000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp1,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Inactive",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256476020_a2ha6sxgt",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256478042_btw71xfqy",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256478232_v66nvewzs",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256484894_ixvapo2un",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256486425_1g7nbehv5",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256714846_6zppekgb7",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256717410_pnxt1cc96",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256723509_3hpr1t6ig",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256725474_xijxyk9pq",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256849542_lmc32tull",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256851891_r1kr1nfmd",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256852032_5b9c5aty1",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256858492_9721m1rti",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761256860458_vx2zpza2v",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761257102089_wio2o90ak",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761257105336_y4lcbouze",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761257105632_4n7etz3oz",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761257106126_0i046w2w7",
-    "slug": "frontend-developer",
-    "title": "Frontend Developer",
-    "description": "• Responsible for frontend development",
-    "status": "active",
-    "salary_range": {
-      "min": 7000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp7,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
-              }
-            },
-            {
-              "key": "email",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "phone_number",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "linkedin_link",
-              "validation": {
-                "required": true
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "job_1761257200366_6kcgssad9",
-    "slug": "asd",
-    "title": "asd",
-    "description": "• asd",
-    "status": "active",
-    "salary_range": {
-      "min": 1000000,
-      "max": 8000000,
-      "currency": "IDR",
-      "display_text": "Rp1,000,000 - Rp8,000,000"
-    },
-    "list_card": {
-      "badge": "Active",
-      "started_on_text": "created on Oct 24, 2025",
-      "cta": "Manage Job"
-    },
-    "application_form": {
-      "sections": [
-        {
-          "title": "Minimum Profile Information Required",
-          "fields": [
-            {
-              "key": "full_name",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "photo_profile",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "gender",
-              "validation": {
-                "required": true
-              }
-            },
-            {
-              "key": "domicile",
-              "validation": {
-                "required": false
               }
             },
             {

@@ -1,26 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-import type { Job } from '@/lib/types';
+import { createClient } from '@/utils/supabase/server';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  const { slug } = await params;
-  
-  const filePath = path.join(process.cwd(), 'data', 'mock-jobs.json');
-  const fileContent = await fs.readFile(filePath, 'utf-8');
-  const jobsData = JSON.parse(fileContent) as Job[];
-  
-  const job = jobsData.find(j => j.slug === slug);
+  try {
+    const { slug } = await params;
+    
+    const supabase = await createClient();
+    
+    const { data: job, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('slug', slug)
+      .single();
 
-  if (!job) {
+    if (error) {
+      console.error('Error fetching job:', error);
+      return NextResponse.json(
+        { error: 'Job not found' },
+        { status: 404 }
+      );
+    }
+
+    if (!job) {
+      return NextResponse.json(
+        { error: 'Job not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ data: job });
+  } catch (error) {
+    console.error('Error in job detail GET:', error);
     return NextResponse.json(
-      { error: 'Job not found' },
-      { status: 404 }
+      { error: 'Internal server error' },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json({ data: job });
 }

@@ -42,6 +42,12 @@ export interface Candidate {
   job_id: string;
   attributes: CandidateAttribute[];
   created_at?: string;
+  users?: {
+    id: string;
+    email: string;
+    full_name: string;
+    role: UserRole;
+  };
 }
 
 export interface CandidateAttribute {
@@ -65,6 +71,36 @@ export interface ApplicationFormData {
 
 // User role type
 export type UserRole = "admin" | "applicant" | null;
+
+// User types
+export interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  role: UserRole;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserSession {
+  id: string;
+  user_id: string;
+  token: string;
+  expires_at: string;
+  created_at: string;
+}
+
+// Auth types
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  session: UserSession;
+  error?: string;
+}
 
 // API response types
 export interface ApiResponse<T> {

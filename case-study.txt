@@ -1,0 +1,239 @@
+Case Study Brief - Frontend Engineer 2025
+Welcome to the Frontend Engineer Hiring Case Study for Rakamin. Your mission is to build a simplified Hiring Management
+Web App that allows recruiters (Admin) to manage job vacancies and applicants (Job Seekers) to apply.
+You will receive:
+1. Design hand-off:
+https://www.figma.com/design/pBRwbOB5TPRgLGovKhFNHm/Frontend-Engineer-Challenge?node-id=14&t=349HRhiJ9D0tdOJL-1
+2. Product Requirement Document (PRD)
+3. Example backend API responses (JSON)
+This case study evaluates how well you can:
+• Translate design and PRD into clean, modular, and functional web apps.
+• Implement dynamic form validation based on backend configuration.
+• Create seamless, performant, and pixel-perfect user experiences.
+• Handle browser-level interactions (e.g., webcam, gestures).
+• Apply thoughtful UX and system design beyond the given brief.
+
+Product Requirement Document (PRD)
+1. Objective
+Build a Hiring Management Web App with two user roles:
+• Admin (Recruiter)
+• Applicant (Job Seeker)
+Each job post includes configurable application fields (mandatory, optional, or hidden) that must dynamically control the
+frontend form’s behavior and validation.
+
+2. User Roles & Key Features
+
+🧑‍💼Admin (Recruiter)
+1. Job List Page
+
+• Display all created job vacancies.
+• Each job shows:
+◦ Title, Department, Status Badge (Active / Inactive / Draft), Salary Range, “Manage Job” CTA.
+• Allow sorting and filtering by status or keyword.
+• Include a “+ Create Job” button to open a modal.
+
+2. Create Job Modal / Page
+Admin can:
+• Input job metadata (title, description, department, etc.)
+• Configure Minimum Profile Information Required for applicants:
+◦ Each field (Full Name, Email, LinkedIn, Domicile, etc.) has three states:
+▪ Mandatory → must be filled
+▪ Optional → may be skipped
+▪ Off → not shown on form
+• Save job configuration to backend (mocked or Supabase).
+• Validate all fields before submission.
+
+3. Candidate Management Page
+• Table view of all applicants per job:
+◦ Columns: Name, Email, Phone, Gender, LinkedIn, Domicile, Applied Date.
+• Each column is resizable (drag to adjust width) and reorderable (drag and drop to change the column order), allowing users
+to customize their table view just like in modern spreadsheet applications.
+• Support sorting, filtering, and pagination.
+
+👩‍💻 Applicant (Job Seeker)
+1. Job List Page
+• Show all active job postings.
+• Each card includes job title, salary, and company.
+• Clicking opens the Job Detail page.
+
+2. Apply Job Page
+• Form fields are dynamically rendered based on job configuration.
+• Validation logic must adapt to the backend’s definition:
+◦ required: true → mandatory
+◦ required: false → optional
+◦ field missing → hidden
+
+3. Profile Picture via Hand Gesture
+• Implement webcam capture with gesture trigger:
+
+1️⃣ 2️⃣ 3️⃣ fingers).
+
+◦ System detects 3 hand poses (
+
+◦ After Pose 3 is detected → photo captured automatically.
+◦ User can preview & save.
+
+4. Feedback State
+• After submitting:
+
+✅ Success message: “Your application has been submitted successfully.”
+◦ ❌ Error state: Missing required fields highlighted.
+◦
+
+3. Backend / Data Integration
+You may choose any backend approach:
+• Option A: Supabase / Firebase — using CRUD operations for persistence.
+• Option B: Local JSON / IndexedDB / LocalStorage — if focusing only on frontend logic.
+Use the provided mock API responses as reference.
+
+Example Backend Mock Responses
+1. Job List
+{
+"data": [
+{
+"id": "job_20251001_0001",
+"slug": "frontend-developer",
+"title": "Frontend Developer",
+"status": "active",
+"salary_range": {
+"min": 7000000,
+"max": 8000000,
+"currency": "IDR",
+"display_text": "Rp7.000.000 - Rp8.000.000"
+},
+"list_card": {
+"badge": "Active",
+"started_on_text": "started on 1 Oct 2025",
+"cta": "Manage Job"
+}
+}
+]
+}
+
+2. Job Configuration (Admin)
+{
+"application_form": {
+"sections": [
+{
+"title": "Minimum Profile Information Required",
+"fields": [
+{ "key": "full_name", "validation": { "required": true } },
+{ "key": "photo_profile", "validation": { "required": true } },
+{ "key": "gender", "validation": { "required": true } },
+{ "key": "domicile", "validation": { "required": false } },
+{ "key": "email", "validation": { "required": true } },
+{ "key": "phone_number", "validation": { "required": true } },
+{ "key": "linkedin_link", "validation": { "required": true } },
+{ "key": "date_of_birth", "validation": { "required": false } }
+]
+}
+]
+}
+}
+
+3. Candidate List
+{
+"data": [
+{
+"id": "cand_20251008_0001",
+"attributes": [
+{ "key": "full_name", "label": "Full Name", "value": "Nadia Putri", "order": 1 },
+{ "key": "email", "label": "Email", "value": "nadia.putri@example.com", "order": 2 },
+{ "key": "phone", "label": "Phone", "value": "+62 812-1234-5678", "order": 3 },
+{ "key": "domicile", "label": "Domicile", "value": "Jakarta", "order": 4 },
+{ "key": "gender", "label": "Gender", "value": "Female", "order": 5 },
+{ "key": "linkedin_link", "label": "LinkedIn", "value": "https://linkedin.com/in/nadiaputri",
+"order": 6 }
+]
+}
+]
+}
+
+Technical References
+Area
+
+Expectation
+
+Framework
+
+React / Next.js / Remix or any JS/TS
+framework/library
+
+Styling
+
+TailwindCSS, CSS Modules, or styledcomponents or any enterprise grade framework
+
+State
+
+Redux / Zustand / Context API or any enterprise
+grade
+
+API
+
+Supabase, Firebase, or mock JSON calls
+
+Webcam
+
+Any open source or your own lib
+
+Testing
+
+Playwright / Jest (optional but plus)
+
+Deployment
+
+Vercel / Netlify / Cloudflare Workers / or your own
+preference
+
+Design Fidelity
+
+Pixel-perfect, responsive, enterprise-grade
+execution
+
+Evaluation Rubric
+We assess your submission based on the following:
+• Functional Completeness — all required features implemented correctly.
+• Code Quality & Architecture — modular, maintainable, and clean.
+• UI Precision — pixel-perfect to design, responsive, and accessible.
+• Dynamic Behavior — validation logic truly adapts to backend config.
+• Error Handling — graceful fallback for edge cases and invalid inputs.
+• Performance — optimized re-renders, responsive UX.
+• Exploration & Initiative — bonus points for spotting design flaws, adding meaningful enhancements, or improving UX
+beyond brief.
+• Documentation — clear setup, structure, and reasoning.
+
+Design Expectation
+Your deliverable must reach enterprise-grade quality, meaning:
+• Smooth transitions, proper spacing, and responsive breakpoints.
+• Consistent component styling and states (hover, focus, disabled).
+• Table resizing and modals behave predictably.
+• No broken flow on invalid input, empty state, or error scenario.
+• Visual alignment and typography must match provided mockups.
+You are encouraged to:
+• Identify missing edge cases in the design.
+• Add UX/UI improvements (tooltips, status indicators, etc.).
+• Extend the app with meaningful enhancements, as long as main requirements remain fulfilled.
+
+Submission Template
+Please compile your submission into a single Case Study Report (PDF) following the structure below, and upload into Rakamin
+Hiring Portal:
+
+Candidate Information
+• Full Name:
+• Email Address:
+1. Deployed URL: (e.g.,) https://yourproject.vercel.app⁠
+2. Provide credential details if you implemented authentication and authorization.
+3. GitHub Repository. Provide a direct link to your public GitHub repository containing all source files and readme.md
+a. ⚠️Important: Do not use the word “Rakamin” anywhere in your repository name, commits, or documentation. This is to
+reduce plagiarism risk.
+b. Example: github.com/username/hiring-platform
+c. minimum readme.md structure:
+i. Project Overview
+ii. Tech Stack Used
+iii. How to Run Locally
+4. Key Features Implemented
+5. Optional Enhancements You Added
+6. Design or Logic Assumptions
+7. Known Limitations (if any)
+
+

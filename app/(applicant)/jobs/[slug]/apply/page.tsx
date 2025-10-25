@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
@@ -13,11 +13,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ slug: strin
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchJob();
-  }, [slug]);
-
-  const fetchJob = async () => {
+  const fetchJob = useCallback(async () => {
     try {
       const response = await fetch(`/api/jobs/${slug}`);
       if (response.ok) {
@@ -34,7 +30,11 @@ export default function ApplyJobPage({ params }: { params: Promise<{ slug: strin
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    fetchJob();
+  }, [fetchJob]);
 
   if (loading) {
     return (
@@ -58,25 +58,37 @@ export default function ApplyJobPage({ params }: { params: Promise<{ slug: strin
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Button
-        variant="ghost"
-        onClick={() => router.push(`/applicant/jobs/${slug}`)}
-        className="mb-6"
-      >
-        <ArrowLeftIcon className="w-4 h-4 mr-2" />
-        Back to Job Details
-      </Button>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Combined Card with Header, Info Banner and Form */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          {/* Header with Info Banner */}
+          <div className="p-6 pb-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => router.push(`/jobs/${slug}`)}
+                  className="w-10 h-10 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                >
+                  <ArrowLeftIcon className="w-5 h-5 text-gray-700" />
+                </button>
+                <h1 className="text-lg font-bold text-gray-900">
+                  Apply {job.title} at {job.department || 'Rakamin'}
+                </h1>
+              </div>
+              
+              {/* Info Banner - Top Right */}
+              <div className="rounded-lg p-3 flex items-start gap-2 max-w-xs">
+                <p className="text-xs ">ℹ️ This field required to fill</p>
+              </div>
+            </div>
+          </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Apply for {job.title}</h1>
-          <p className="text-gray-600">
-            Please fill out the application form below. Fields marked with * are required.
-          </p>
+          {/* Form Content */}
+          <div className="p-8 pt-0">
+            <DynamicApplicationForm job={job} />
+          </div>
         </div>
-
-        <DynamicApplicationForm job={job} />
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon, BriefcaseIcon, CurrencyDollarIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, BriefcaseIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Job } from '@/lib/types';
@@ -13,11 +13,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchJob();
-  }, [slug]);
-
-  const fetchJob = async () => {
+  const fetchJob = useCallback(async () => {
     try {
       // Try API first
       const response = await fetch(`/api/jobs/${slug}`);
@@ -36,7 +32,11 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    fetchJob();
+  }, [fetchJob]);
 
   if (loading) {
     return (
@@ -58,90 +58,108 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
       </div>
     );
   }
-
-  return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Back Button */}
-      <Button
-        variant="ghost"
-        onClick={() => router.push('/jobs')}
-        className="mb-6"
-      >
-        <ArrowLeftIcon className="w-4 h-4 mr-2" />
-        Back to Jobs
-      </Button>
-
-      {/* Job Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6">
-        <div className="flex justify-between items-start mb-4">
-          <h1 className="text-3xl font-bold text-gray-900">{job.title}</h1>
-          <Badge className="bg-green-100 text-green-800">
-            {job.list_card.badge}
-          </Badge>
+return (
+  <div className="min-h-screen bg-gray-50 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Combined Card with Header and Content */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {/* Header with Info Banner */}
+        <div className="p-6 pb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/jobs')}
+                className="w-10 h-10 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
+              >
+                <ArrowLeftIcon className="w-5 h-5 text-gray-700" />
+              </button>
+              <h1 className="text-lg font-bold text-gray-900">
+                {job.title} at {job.department || 'Rakamin'}
+              </h1>
+            </div>
+            
+            {/* Status Badge - Top Right */}
+            <div className="rounded-lg p-3 flex items-start gap-2 max-w-xs">
+              <Badge className={job.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                {job.list_card.badge}
+              </Badge>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-4 mb-6">
-          {job.department && (
-            <div className="flex items-center text-gray-600">
-              <BriefcaseIcon className="w-5 h-5 mr-2" />
-              <span>{job.department}</span>
+        {/* Job Content */}
+        <div className="p-8 pt-0">
+          {/* Job Details */}
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-4 mb-4">
+              {job.department && (
+                <div className="flex items-center text-gray-600">
+                  <BriefcaseIcon className="w-5 h-5 mr-2" />
+                  <span>{job.department}</span>
+                </div>
+              )}
+              
+              <div className="flex items-center text-gray-600">
+                <CurrencyDollarIcon className="w-5 h-5 mr-2" />
+                <span>{job.salary_range.display_text}</span>
+              </div>
+            </div>
+
+            <div className="text-sm text-gray-500 mb-6">
+              {job.list_card.started_on_text}
+            </div>
+          </div>
+
+          {/* Job Description */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Job Description</h2>
+            <div className="prose prose-gray max-w-none">
+              <p className="text-gray-700 whitespace-pre-wrap">
+                {job.description || 'No description available.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Application Requirements */}
+          {job.application_form && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Application Requirements
+              </h3>
+              <p className="text-gray-600 mb-4">
+                To apply for this position, you&apos;ll need to provide the following information:
+              </p>
+              <ul className="list-disc list-inside space-y-2">
+                {job.application_form.sections[0].fields.map((field) => (
+                  <li key={field.key} className="text-gray-700">
+                    {field.key.split('_').map(word =>
+                      word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ')}
+                    {field.validation.required && (
+                      <span className="text-red-600 ml-1">*</span>
+                    )}
+                    {!field.validation.required && (
+                      <span className="text-gray-500 text-sm ml-1">(optional)</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
-          
-          <div className="flex items-center text-gray-600">
-            <CurrencyDollarIcon className="w-5 h-5 mr-2" />
-            <span>{job.salary_range.display_text}</span>
+
+          {/* Apply Button */}
+          <div className="pt-4">
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => router.push(`/jobs/${job.slug}/apply`)}
+            >
+              Apply Now
+            </Button>
           </div>
         </div>
-
-        <div className="text-sm text-gray-500 mb-6">
-          {job.list_card.started_on_text}
-        </div>
-
-        <Button
-          size="lg"
-          className="w-full sm:w-auto"
-          onClick={() => router.push(`/jobs/${job.slug}/apply`)}
-        >
-          Apply Now
-        </Button>
-      </div>
-
-      {/* Job Description */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-4">Job Description</h2>
-        <div className="prose prose-gray max-w-none">
-          <p className="text-gray-700 whitespace-pre-wrap">
-            {job.description || 'No description available.'}
-          </p>
-        </div>
-
-        {job.application_form && (
-          <div className="mt-8 pt-8 border-t">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Application Requirements
-            </h3>
-            <p className="text-gray-600 mb-4">
-              To apply for this position, you'll need to provide the following information:
-            </p>
-            <ul className="list-disc list-inside space-y-2">
-              {job.application_form.sections[0].fields.map((field) => (
-                <li key={field.key} className="text-gray-700">
-                  {field.key.split('_').map(word => 
-                    word.charAt(0).toUpperCase() + word.slice(1)
-                  ).join(' ')}
-                  {field.validation.required && (
-                    <span className="text-red-600 ml-1">*</span>
-                  )}
-                  {!field.validation.required && (
-                    <span className="text-gray-500 text-sm ml-1">(optional)</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </div>
-  );
+  </div>
+);
 }
