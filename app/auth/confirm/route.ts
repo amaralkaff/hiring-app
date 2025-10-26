@@ -1,14 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 
+// Simple CORS handler for preflight requests
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 200 })
+}
+
 export async function GET(request: Request) {
+  // Simple approach - no complex CORS handling
+
   const { searchParams } = new URL(request.url)
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type')
   const code = searchParams.get('code')
   const email = searchParams.get('email')
 
-  
+  // Handle CORS preflight requests
+  const origin = request.headers.get('origin')
+
   // Create redirect link without the secret token
   const url = new URL(request.url)
   const redirectTo = new URL(url.origin + '/login')
