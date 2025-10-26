@@ -18,9 +18,10 @@ export async function GET(request: Request) {
   // Handle CORS preflight requests
   const origin = request.headers.get('origin')
 
-  // Create redirect link without the secret token
+  // Always use production domain for redirects
+  const productionDomain = 'https://hiring-app-palepale.netlify.app'
   const url = new URL(request.url)
-  const redirectTo = new URL(url.origin + '/login')
+  const redirectTo = new URL(productionDomain + '/login')
   redirectTo.searchParams.delete('token_hash')
   redirectTo.searchParams.delete('type')
   redirectTo.searchParams.delete('code')
@@ -116,8 +117,8 @@ export async function GET(request: Request) {
 
         const correctNext = userRole === 'admin' ? '/dashboard' : '/jobs'
 
-        // Update redirect URL based on role
-        const roleBasedRedirectTo = new URL(url.origin + correctNext)
+        // Update redirect URL based on role - always use production domain
+        const roleBasedRedirectTo = new URL(productionDomain + correctNext)
         roleBasedRedirectTo.searchParams.delete('token_hash')
         roleBasedRedirectTo.searchParams.delete('type')
         roleBasedRedirectTo.searchParams.delete('code')
@@ -143,14 +144,14 @@ export async function GET(request: Request) {
         if (verifyError?.message?.includes('expired') ||
             verifyError?.message?.includes('Invalid') ||
             verifyError?.message?.includes('token')) {
-          // Expired or invalid link
-          const errorUrl = new URL(url.origin + '/login')
+          // Expired or invalid link - use production domain
+          const errorUrl = new URL(productionDomain + '/login')
           errorUrl.searchParams.set('error', 'confirmation_link_expired')
           errorUrl.searchParams.set('message', 'Tautan konfirmasi Anda telah kedaluwarsa. Silakan coba lagi.')
           return NextResponse.redirect(errorUrl)
         } else {
-          // Other verification errors
-          const errorUrl = new URL(url.origin + '/login')
+          // Other verification errors - use production domain
+          const errorUrl = new URL(productionDomain + '/login')
           errorUrl.searchParams.set('error', 'confirmation_failed')
           errorUrl.searchParams.set('message', 'Konfirmasi email gagal. Silakan coba lagi.')
           return NextResponse.redirect(errorUrl)
@@ -158,7 +159,7 @@ export async function GET(request: Request) {
       }
     } catch (err) {
       console.error('Unexpected error during confirmation:', err)
-      const errorUrl = new URL(url.origin + '/login')
+      const errorUrl = new URL(productionDomain + '/login')
       errorUrl.searchParams.set('error', 'confirmation_error')
       errorUrl.searchParams.set('message', 'Terjadi kesalahan saat konfirmasi email. Silakan coba lagi.')
       return NextResponse.redirect(errorUrl)
@@ -166,7 +167,7 @@ export async function GET(request: Request) {
   }
 
   // Missing parameters - redirect to login with error
-  const errorUrl = new URL(url.origin + '/login')
+  const errorUrl = new URL(productionDomain + '/login')
   errorUrl.searchParams.set('error', 'invalid_confirmation_link')
   errorUrl.searchParams.set('message', 'Tautan konfirmasi tidak valid. Silakan periksa email Anda dan coba lagi.')
   return NextResponse.redirect(errorUrl)
