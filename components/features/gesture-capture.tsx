@@ -1012,9 +1012,9 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Raise Your Hand to Capture </DialogTitle>
+            <DialogTitle>Complete the Gesture Sequence to Capture Photo</DialogTitle>
             <DialogDescription>
-              We’ll take the photo once your hand pose is detected.
+              Show 1 finger → then 2 fingers → then 3 fingers. The photo will be captured automatically.
             </DialogDescription>
           </DialogHeader>
 

@@ -123,11 +123,15 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
         }
 
         // Get user profile data
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('users')
           .select('full_name, profile_photo_url, profile_photo_name, domicile, phone_number, linkedin_link, date_of_birth, gender')
           .eq('id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle() to handle cases where user doesn't exist in users table
+
+        if (profileError || !profileData) {
+          console.error('Error loading profile data:', profileError);
+        }
 
         if (profileData) {
           // Map all profile fields to form fields
@@ -246,11 +250,16 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
       }
 
       // Check if user profile exists
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: existingError } = await supabase
         .from('users')
         .select('full_name, profile_photo_url, profile_photo_name, domicile, phone_number, linkedin_link, date_of_birth, gender')
         .eq('id', user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle() to handle cases where user doesn't exist in users table
+
+      if (existingError || !existingProfile) {
+        console.error('Error fetching existing profile:', existingError);
+        return; // Exit if we can't fetch existing profile
+      }
 
       if (existingProfile) {
         // Only update fields that are currently empty/null

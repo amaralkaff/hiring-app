@@ -58,15 +58,21 @@ export function UserDropdown({ user, userRole }: UserDropdownProps) {
 
     const fetchProfileData = async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('users')
           .select('profile_photo_url, profile_photo_name')
           .eq('id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle() instead of single() to handle 0 rows
 
-        setProfileData(data);
+        if (error) {
+          console.error('Error loading profile data:', error);
+          setProfileData(null);
+        } else {
+          setProfileData(data);
+        }
       } catch (error) {
         console.error('Error loading profile data:', error);
+        setProfileData(null);
       }
     };
 
