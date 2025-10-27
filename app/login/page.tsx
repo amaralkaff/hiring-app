@@ -1,23 +1,14 @@
 'use client';
 
 import { useState, Suspense, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useSearchParams } from 'next/navigation';
+import { useActionState } from 'react';
+import * as z from 'zod';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { login, signInWithGoogle } from '@/app/auth/actions';
-import { cn } from '@/lib/utils';
 import { KeyIcon } from '@heroicons/react/24/outline';
 
 const loginSchema = z.object({
@@ -25,35 +16,27 @@ const loginSchema = z.object({
   password: z.string().optional(),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
-
 function LoginPageContent() {
-  const [authError, setAuthError] = useState('');
-  const [isPending, setIsPending] = useState(false);
   const [isGooglePending, setIsGooglePending] = useState(false);
   const [emailValidationError, setEmailValidationError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const searchParams = useSearchParams();
-  const message = searchParams.get('message');
   const error = searchParams.get('error');
 
   const [loginMethod, setLoginMethod] = useState<'magic' | 'password'>('magic');
 
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+  // Use useActionState for form handling
+  const [state, formAction, isPending] = useActionState(login, {
+    error: '',
+    success: false
   });
 
-  // Watch email field for real-time validation
-  const emailValue = form.watch('email');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   // Real-time email validation
   useEffect(() => {
-    if (emailValue && emailValue.length > 0) {
-      const validationResult = loginSchema.safeParse({ email: emailValue, password: '' });
+    if (email && email.length > 0) {
+      const validationResult = loginSchema.safeParse({ email, password: '' });
       if (!validationResult.success && validationResult.error.issues.some(issue => issue.path.includes('email'))) {
         const emailError = validationResult.error.issues.find(issue => issue.path.includes('email'))?.message;
         setEmailValidationError(emailError || 'Email tidak valid');
@@ -63,62 +46,22 @@ function LoginPageContent() {
     } else {
       setEmailValidationError('');
     }
-  }, [emailValue]);
+  }, [email]);
 
-  const onLoginSubmit = async (data: LoginFormData) => {
-    setAuthError('');
-    setSuccessMessage('');
-    setIsPending(true);
-
-    try {
-      const formData = new FormData();
-      formData.set('email', data.email);
-      formData.set('method', loginMethod);
-
-      if (loginMethod === 'password') {
-        formData.set('password', data.password || '');
-      }
-
-      const result = await login(formData);
-      if (result?.error) {
-        setAuthError(result.error);
-      } else if (result?.success) {
-        // Store email in localStorage and redirect to magic link sent page
-        setAuthError('');
-        if (loginMethod === 'magic') {
-          localStorage.setItem('pendingEmail', data.email);
-          window.location.href = '/auth/magic-link-sent?email=' + encodeURIComponent(data.email);
-        }
-        // The user will be redirected after clicking the magic link
-      } else {
-        // Password authentication successful - server will handle redirect
-        // No action needed here as the server action will redirect
-        setAuthError('');
-        setSuccessMessage('Login berhasil! Mengalihkan...');
-      }
-    } catch (error) {
-      // Handle Next.js redirect errors - these are expected and not actual errors
-      if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
-        // This is the expected redirect, don't treat it as an error
-        throw error; // Re-throw to let Next.js handle the redirect
-      }
-
-      // Set error for actual login failures
-      setAuthError('Terjadi kesalahan. Silakan coba lagi.');
-    } finally {
-      // Always reset isPending - the server will handle redirect if successful
-      setIsPending(false);
+  // Handle magic link redirect for successful magic link login
+  useEffect(() => {
+    if (state.success && state.message && loginMethod === 'magic') {
+      // Store email in localStorage and redirect to magic link sent page
+      localStorage.setItem('pendingEmail', email);
+      window.location.href = '/auth/magic-link-sent?email=' + encodeURIComponent(email);
     }
-  };
+  }, [state.success, state.message, loginMethod, email]);
 
   const handleGoogleSignIn = async () => {
-    setAuthError('');
-    setIsGooglePending(true);
-
     try {
       const result = await signInWithGoogle();
       if (result?.error) {
-        setAuthError(result.error);
+        // The error will be shown in the form state
       }
     } finally {
       setIsGooglePending(false);
@@ -131,9 +74,11 @@ function LoginPageContent() {
 
         {/* Logo */}
         <div className="flex justify-start">
-          <img
+          <Image
             src="https://khzrfwyofxqrqvelydkn.supabase.co/storage/v1/object/public/logo/255145972b7aff74a83fec16f9c08eda3afe6ae3.png"
             alt="Company Logo"
+            width={144}
+            height={144}
             className="relative h-36 w-auto top-12"
           />
         </div>
@@ -150,26 +95,26 @@ function LoginPageContent() {
                 Daftar dengan menggunakan email
               </Link>
             </p>
-            {successMessage && (
+            {state.message && state.success && (
               <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
                 <p className="text-sm text-green-600 flex items-center gap-2">
                   <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  {successMessage}
+                  {state.message}
                 </p>
               </div>
             )}
 
-            {authError && (
+            {state.error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-sm text-red-600 text-center">
-                  {authError}
+                  {state.error}
                 </p>
               </div>
             )}
 
-            {error && !authError && (
+            {error && !state.error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-sm text-red-600 text-center">
                   {(() => {
@@ -191,7 +136,7 @@ function LoginPageContent() {
               </div>
             )}
 
-            {emailValidationError && loginMethod === 'magic' && !successMessage && (
+            {emailValidationError && loginMethod === 'magic' && !state.success && (
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                 <p className="text-sm text-yellow-600 text-center">
                   <strong>Perhatian:</strong> {emailValidationError}. Harap perbaiki format email sebelum mengirim tautan ajaib.
@@ -201,86 +146,65 @@ function LoginPageContent() {
           </div>
 
           {/* Login Form */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onLoginSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
+          <form action={formAction} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700" htmlFor="email">
+                Alamat email
+              </label>
+              <Input
+                type="email"
+                id="email"
                 name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
-                      Alamat email
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        autoComplete="email"
-                        placeholder="nama@email.com"
-                        className={cn(
-                          "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
-                          form.formState.errors.email
-                            ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus placeholder:text-neutral-60"
-                            : "border-neutral-40 bg-neutral-10 hover:border-primary-hover focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
-                        )}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-sm text-red-600" />
-                  </FormItem>
-                )}
+                autoComplete="email"
+                placeholder="nama@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none border-neutral-40 bg-neutral-10 hover:border-primary-hover focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60 mt-2"
+                required
               />
+            </div>
 
-              {/* Password Field (shown when password login is selected) */}
-              {loginMethod === 'password' && (
-                <div className="mt-4">
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
-                          Kata Sandi
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            autoComplete="current-password"
-                            placeholder="Masukkan kata sandi"
-                            className={cn(
-                              "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
-                              form.formState.errors.password
-                                ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus placeholder:text-neutral-60"
-                                : "border-neutral-40 bg-neutral-10 hover:border-primary-hover focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
-                            )}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-sm text-red-600" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+            {/* Password Field (shown when password login is selected) */}
+            {loginMethod === 'password' && (
+              <div className="mt-4">
+                <label className="text-sm font-medium text-gray-700" htmlFor="password">
+                  Kata Sandi
+                </label>
+                <Input
+                  type="password"
+                  id="password"
+                  name="password"
+                  autoComplete="current-password"
+                  placeholder="Masukkan kata sandi"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none border-neutral-40 bg-neutral-10 hover:border-primary-hover focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60 mt-2"
+                  required={loginMethod === 'password'}
+                />
+              </div>
+            )}
+
+            {/* Hidden field for login method */}
+            <input type="hidden" name="method" value={loginMethod} />
+
+            <Button
+              type="submit"
+              disabled={isPending || (loginMethod === 'magic' && !!emailValidationError)}
+              className="w-full h-12 bg-[#F5A623] hover:bg-[#E09612] text-white font-black rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPending ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {loginMethod === 'magic' ? 'Mengirim...' : 'Masuk...'}
+                </span>
+              ) : (
+                loginMethod === 'magic' ? 'Daftar dengan email' : 'Masuk'
               )}
-
-                <Button
-                  type="submit"
-                  disabled={isPending || (loginMethod === 'magic' && !!emailValidationError)}
-                  className="w-full h-12 bg-[#F5A623] hover:bg-[#E09612] text-white font-black rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isPending ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      {loginMethod === 'magic' ? 'Mengirim...' : 'Masuk...'}
-                    </span>
-                  ) : (
-                    loginMethod === 'magic' ? 'Daftar dengan email' : 'Masuk'
-                  )}
-                </Button>
-            </form>
-          </Form>
+            </Button>
+          </form>
 
 
           {/* Divider */}

@@ -29,8 +29,7 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [loadingProvinces, setLoadingProvinces] = useState(false);
-  const [phoneValid, setPhoneValid] = useState(true);
-
+  
   const fields = job.application_form?.sections[0].fields || [];
 
   // Load provinces from API
@@ -94,9 +93,7 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
     handleSubmit,
     control,
     setValue,
-    reset,
     watch,
-    trigger,
     formState: { errors },
   } = useForm<ApplicationFormData>();
 
@@ -133,9 +130,6 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
           .single();
 
         if (profileData) {
-          // Pre-populate form fields with existing profile data
-          const defaultValues: ApplicationFormData = {};
-
           // Map all profile fields to form fields
           if (profileData.full_name) {
             setValue('full_name', profileData.full_name);

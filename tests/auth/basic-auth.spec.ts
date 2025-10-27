@@ -106,7 +106,7 @@ test.describe('Basic Authentication Tests', () => {
       // Check if dropdown content appears
       await expect(page.locator('text=admin')).toBeVisible({ timeout: 3000 });
       console.log('✅ User dropdown content visible');
-    } catch (error) {
+    } catch {
       console.log('⚠️ User dropdown not immediately available after login');
       console.log('This might be due to auth state loading delays');
     }

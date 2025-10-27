@@ -171,7 +171,7 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }, [supabase]);
+  }, [supabase, router]);
 
   useEffect(() => {
     loadProfile()
@@ -219,7 +219,7 @@ export default function ProfilePage() {
       const file = new File([blob], `profile_${user.id}.jpg`, { type: 'image/jpeg' })
 
       // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('profile-photos')
         .upload(`${user.id}/profile_${user.id}.jpg`, file, {
           upsert: true,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export default function MagicLinkSentPage() {
   const [email, setEmail] = useState('');
@@ -38,9 +39,11 @@ export default function MagicLinkSentPage() {
 
           {/* Illustration */}
           <div className="my-8 flex justify-center">
-            <img
+            <Image
               src="/magic-link-succes.png"
               alt="Magic link sent illustration"
+              width={320}
+              height={240}
               className="w-74 max-w-sm h-auto"
             />
           </div>

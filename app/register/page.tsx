@@ -5,9 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useSearchParams } from 'next/navigation';
 import {
   Form,
   FormControl,
@@ -16,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { register, signInWithGoogle, login } from '@/app/auth/actions';
+import { register, signInWithGoogle } from '@/app/auth/actions';
 import  {KeyIcon}  from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
@@ -51,7 +51,7 @@ export default function RegisterPage() {
   const [authError, setAuthError] = useState('');
   const [isPending, setIsPending] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [registeredEmail] = useState('');
   const [isGooglePending, setIsGooglePending] = useState(false);
   const [emailValidationError, setEmailValidationError] = useState('');
   const [emailExists, setEmailExists] = useState<boolean | null>(null);
@@ -236,9 +236,11 @@ export default function RegisterPage() {
 
         {/* Logo */}
         <div className="flex justify-start">
-          <img
+          <Image
             src="https://khzrfwyofxqrqvelydkn.supabase.co/storage/v1/object/public/logo/255145972b7aff74a83fec16f9c08eda3afe6ae3.png"
             alt="Company Logo"
+            width={144}
+            height={144}
             className="relative h-36 w-auto top-12"
           />
         </div>

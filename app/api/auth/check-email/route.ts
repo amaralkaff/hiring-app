@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       .single()
 
     return NextResponse.json({ exists: !!data }, { status: 200 })
-  } catch (e) {
+  } catch {
     return NextResponse.json({ exists: false }, { status: 200 })
   }
 }

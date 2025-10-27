@@ -436,14 +436,10 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
 
         // Enhanced visual feedback based on detection state
         let boxColor = '#FFA500'; // Orange for undetected/no gesture
-        let textColor = '#FFA500';
-        let boxOpacity = 0.7;
 
         if (currentFingerCount > 0 && currentFingerCount <= 3) {
           // Valid gesture detected - use success colors
           boxColor = '#00FF00'; // Green
-          textColor = '#00FF00';
-          boxOpacity = 0.9;
         }
 
         // Calculate bounding box variables outside the if block for scope

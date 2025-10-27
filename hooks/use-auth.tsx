@@ -7,13 +7,20 @@ import { createClient } from '@/utils/supabase/client'
 const getRole = async (userId: string): Promise<'admin' | 'applicant'> => {
   const supabase = createClient()
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('users')
       .select('role')
       .eq('id', userId)
       .single()
+
+    if (error) {
+      console.error('Error fetching user role:', error)
+      return 'applicant'
+    }
+
     return data?.role || 'applicant'
-  } catch {
+  } catch (error) {
+    console.error('Unexpected error fetching user role:', error)
     return 'applicant'
   }
 }
@@ -35,26 +42,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true
+    let loadingTimeout: NodeJS.Timeout
 
-    // Get initial session
-    const getSession = async () => {
+    const forceSetLoadingComplete = () => {
+      if (mounted) {
+        setIsLoading(false)
+      }
+    }
+
+    const updateUserState = async (session: { user?: User | null } | null) => {
+      if (!mounted) return
+
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-
-        if (!mounted) return
-
         if (session?.user) {
           setUser(session.user)
-          // Get role from database
-          const role = await getRole(session.user.id)
+          // Get role from database with timeout
+          const role = await Promise.race([
+            getRole(session.user.id),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000))
+          ])
           if (mounted) {
-            setUserRole(role)
+            setUserRole(role || 'applicant')
           }
         } else {
           setUser(null)
           setUserRole(null)
         }
-      } catch {
+      } catch (error) {
+        console.error('Error updating user state:', error)
         if (mounted) {
           setUser(null)
           setUserRole(null)
@@ -62,6 +77,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } finally {
         if (mounted) {
           setIsLoading(false)
+          // Clear the timeout if loading completes normally
+          if (loadingTimeout) {
+            clearTimeout(loadingTimeout)
+          }
+        }
+      }
+    }
+
+    // Get initial session
+    const getSession = async () => {
+      // Set a timeout to force loading complete after 2 seconds max (reduced)
+      loadingTimeout = setTimeout(forceSetLoadingComplete, 2000)
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        await updateUserState(session)
+      } catch (error) {
+        console.error('Error getting session:', error)
+        if (mounted) {
+          setUser(null)
+          setUserRole(null)
+          setIsLoading(false)
+          if (loadingTimeout) {
+            clearTimeout(loadingTimeout)
+          }
         }
       }
     }
@@ -72,25 +112,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return
 
+      // Clear any existing timeout
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout)
+      }
+
       setIsLoading(true)
-      if (session?.user) {
-        setUser(session.user)
-        // Get role from database
-        const role = await getRole(session.user.id)
-        if (mounted) {
-          setUserRole(role)
-        }
-      } else {
-        setUser(null)
-        setUserRole(null)
-      }
-      if (mounted) {
-        setIsLoading(false)
-      }
+      // Set a timeout for auth changes as well (reduced)
+      loadingTimeout = setTimeout(forceSetLoadingComplete, 1500)
+
+      await updateUserState(session)
     })
 
     return () => {
       mounted = false
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout)
+      }
       subscription.unsubscribe()
     }
   }, [supabase])

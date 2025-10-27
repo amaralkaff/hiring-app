@@ -46,7 +46,6 @@ export function CountryPhoneInput({
   value,
   onChange,
   placeholder = "Enter phone number",
-  className,
   error
 }: CountryPhoneInputProps) {
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]); // Default to Indonesia

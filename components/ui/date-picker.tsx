@@ -2,8 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { CalendarIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 interface DatePickerProps {
   value?: string;
@@ -97,12 +95,7 @@ export default function DatePicker({ value, onChange, placeholder = "Select date
     setCurrentDate(newDate);
   };
 
-  const navigateYear = (direction: number) => {
-    const newDate = new Date(currentDate);
-    newDate.setFullYear(currentDate.getFullYear() + direction);
-    setCurrentDate(newDate);
-  };
-
+  
   const handleDateClick = (day: number, isCurrentMonth: boolean, isNextMonth: boolean) => {
     const newDate = new Date(currentDate);
 
@@ -135,7 +128,7 @@ export default function DatePicker({ value, onChange, placeholder = "Select date
         month: 'short',
         day: 'numeric'
       });
-    } catch (error) {
+    } catch {
       return placeholder;
     }
   };

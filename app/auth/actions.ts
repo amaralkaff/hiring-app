@@ -5,7 +5,14 @@ import { redirect } from 'next/navigation'
 
 import { createClient } from '@/utils/supabase/server'
 
-export async function login(formData: FormData) {
+// Define proper types for login state
+interface LoginState {
+  error?: string | null;
+  success: boolean;
+  message?: string;
+}
+
+export async function login(prevState: LoginState, formData: FormData) {
   'use server'
 
   const supabase = await createClient()
@@ -14,7 +21,7 @@ export async function login(formData: FormData) {
   const loginMethod = formData.get('method') as string
 
   if (!email || !email.includes('@')) {
-    return { error: 'Email tidak valid' }
+    return { error: 'Email tidak valid', success: false }
   }
 
   try {
@@ -26,7 +33,7 @@ export async function login(formData: FormData) {
       })
 
       if (error) {
-        return { error: 'Email atau password salah' }
+        return { error: 'Email atau password salah', success: false }
       }
 
       // Get user role to determine correct redirect
@@ -60,12 +67,13 @@ export async function login(formData: FormData) {
 
       if (error) {
         console.error('Login magic link error:', error)
-        return { error: error.message }
+        return { error: error.message, success: false }
       }
 
       return {
         success: true,
-        message: 'Tautan ajaib telah dikirim ke email Anda. Silakan periksa inbox Anda untuk masuk.'
+        message: 'Tautan ajaib telah dikirim ke email Anda. Silakan periksa inbox Anda untuk masuk.',
+        error: null
       }
     }
   } catch (error) {
@@ -76,7 +84,7 @@ export async function login(formData: FormData) {
     }
 
     console.error('Unexpected error during login:', error)
-    return { error: 'Terjadi kesalahan. Silakan coba lagi.' }
+    return { error: 'Terjadi kesalahan. Silakan coba lagi.', success: false }
   }
 }
 
@@ -109,7 +117,7 @@ export async function register(formData: FormData) {
 
     if (method === 'password') {
       // Password-based registration
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {

@@ -15,12 +15,8 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const email = searchParams.get('email')
 
-  // Handle CORS preflight requests
-  const origin = request.headers.get('origin')
-
   // Always use production domain for redirects
   const productionDomain = 'https://hiring-app-palepale.netlify.app'
-  const url = new URL(request.url)
   const redirectTo = new URL(productionDomain + '/login')
   redirectTo.searchParams.delete('token_hash')
   redirectTo.searchParams.delete('type')
@@ -59,7 +55,7 @@ export async function GET(request: Request) {
         if (verifyError) {
           try {
             ({ data: verifyData, error: verifyError } = await supabase.auth.getUser());
-          } catch (getUserError) {
+          } catch {
             // Handle AuthSessionMissingError gracefully
             verifyError = { message: 'Authentication error' };
           }

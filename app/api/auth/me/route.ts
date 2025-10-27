@@ -11,7 +11,7 @@ export async function GET() {
       const { data, error: authError } = await supabase.auth.getUser();
       user = data.user;
       error = authError;
-    } catch (err) {
+    } catch {
       error = { message: 'Unknown error occurred' };
     }
 

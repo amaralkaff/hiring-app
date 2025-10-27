@@ -4,7 +4,6 @@ import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, useBreadcrumbs } from '@/components/ui/breadcrumb';
 import { UserDropdown } from '@/components/ui/user-dropdown';
-import { AuthLoading } from '@/components/ui/auth-loading';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -25,10 +24,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
   }, [user, userRole, isLoading, router]);
 
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return <AuthLoading message="Checking authentication..." />;
-  }
 
   // Show minimal loading only when no user exists
   if (!user) {
