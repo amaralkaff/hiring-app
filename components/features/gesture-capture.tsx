@@ -799,22 +799,10 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
                     </div>
                   </div>
 
-                  {/* Reference Frame - Top Right */}
+                  {/* Countdown Display - Top Right */}
                   <div className="absolute top-4 right-4">
-                    {countdown !== null ? (
-                      // Show countdown number when counting down
+                    {countdown !== null && (
                       <span className="text-6xl text-black">{countdown}</span>
-                    ) : (
-                      // Show gesture reference image when not counting down
-                      <Image
-                        src={gestureSequence.length === 0 ? "/meme-finger-1.png" :
-                             gestureSequence.length === 1 ? "/meme-finger-2.png" :
-                             gestureSequence.length === 2 ? "/meme-finger-3.png" :
-                             "/meme-finger-1.png"}
-                        alt="Current gesture reference"
-                        width={240}
-                        height={240}
-                      />
                     )}
                   </div>
 

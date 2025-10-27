@@ -94,12 +94,9 @@ export default function SignupPage() {
           }, 3000);
         }
       } else if (result?.success) {
-        setRegisteredEmail(data.email);
-        setSuccessMessage(`Email berhasil dikirim ke ${data.email}. Silakan periksa inbox Anda.`);
-        // Show success message for 3 seconds before showing confirmation screen
-        setTimeout(() => {
-          setShowConfirmation(true);
-        }, 3000);
+        // Store email in localStorage and redirect to magic link sent page
+        localStorage.setItem('pendingEmail', data.email);
+        window.location.href = '/auth/magic-link-sent?email=' + encodeURIComponent(data.email);
       }
     } finally {
       setIsPending(false);

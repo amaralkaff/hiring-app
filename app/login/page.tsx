@@ -82,10 +82,11 @@ function LoginPageContent() {
       if (result?.error) {
         setAuthError(result.error);
       } else if (result?.success) {
-        // Show success message instead of redirecting
+        // Store email in localStorage and redirect to magic link sent page
         setAuthError('');
         if (loginMethod === 'magic') {
-          setSuccessMessage(`Email berhasil dikirim ke ${data.email}. Silakan periksa inbox Anda.`);
+          localStorage.setItem('pendingEmail', data.email);
+          window.location.href = '/auth/magic-link-sent?email=' + encodeURIComponent(data.email);
         }
         // The user will be redirected after clicking the magic link
       }
@@ -113,19 +114,19 @@ function LoginPageContent() {
       <div className="max-w-lg w-full space-y-4">
 
         {/* Logo */}
-        {/* <div className="flex justify-start">
+        <div className="flex justify-start">
           <img
             src="https://khzrfwyofxqrqvelydkn.supabase.co/storage/v1/object/public/logo/255145972b7aff74a83fec16f9c08eda3afe6ae3.png"
             alt="Company Logo"
             className="relative h-36 w-auto top-12"
           />
-        </div> */}
+        </div>
 
         {/* White Card Container */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              {loginMethod === 'magic' ? 'Bergabung dengan Palepale' : 'Masuk ke Akun Anda'}
+              {loginMethod === 'magic' ? 'Bergabung dengan Rakamin' : 'Masuk ke Akun Anda'}
             </h2>
             <p className="text-sm text-gray-600 mb-6">
               {loginMethod === 'magic' ? (
