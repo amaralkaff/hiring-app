@@ -241,8 +241,6 @@ export default function ProfilePage() {
       // Update user profile with new photo URL
       await handleProfilePhotoUpdate(publicUrl)
       setCapturedPhoto(null) // Clear captured photo after successful upload
-
-      alert('Profile photo captured! It will be automatically used in your job applications.')
     } catch (error) {
       console.error('Error uploading photo:', error)
       alert('Failed to upload photo. Please try again.')
@@ -284,7 +282,6 @@ export default function ProfilePage() {
         data: { full_name: fullName || null }
       })
 
-      alert('Profile updated successfully!')
       setErrors({}) // Clear errors on success
     } catch (error) {
       console.error('Error saving profile:', error)
