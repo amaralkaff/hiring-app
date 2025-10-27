@@ -95,7 +95,7 @@ function LoginPageContent() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              Masuk
+              Masuk ke Rakamin
             </h2>
             <p className="text-sm text-gray-600 mb-6">
               Belum punya akun?{' '}
@@ -207,7 +207,7 @@ function LoginPageContent() {
                 </span>
               ) : (
                 <span className="flex items-center justify-center">
-                  {loginMethod === 'magic' ? 'Masuk dengan Magic Link' : 'Masuk'}
+                  {loginMethod === 'magic' ? 'Kirim link' : 'Masuk'}
                 </span>
               )}
             </Button>
