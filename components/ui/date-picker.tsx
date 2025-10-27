@@ -104,7 +104,7 @@ export default function DatePicker({ value, onChange, placeholder = "Select date
   };
 
   const handleDateClick = (day: number, isCurrentMonth: boolean, isNextMonth: boolean) => {
-    let newDate = new Date(currentDate);
+    const newDate = new Date(currentDate);
 
     if (!isCurrentMonth) {
       if (isNextMonth) {

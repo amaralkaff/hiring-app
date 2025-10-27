@@ -160,7 +160,7 @@ function LoginPageContent() {
                   {(() => {
                     switch(error) {
                       case 'confirmation_failed':
-                        return 'Email ini sudah terdaftar sebagai akun di Rakamin Academy. Silakan masuk.';
+                        return 'Email ini sudah terdaftar sebagai akun di Rakamin. Silakan masuk.';
                       case 'confirmation_link_expired':
                         return 'Tautan konfirmasi Anda telah kedaluwarsa. Silakan daftar lagi untuk menerima email konfirmasi baru.';
                       default:
