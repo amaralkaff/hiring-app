@@ -6,7 +6,6 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import { createClient } from '@/utils/supabase/client'
 import { GestureCapture } from '@/components/features/gesture-capture'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -264,7 +263,7 @@ export default function ProfilePage() {
     setSaving(true)
 
     try {
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         full_name: fullName || null,
         domicile: domicile || null,
         phone_number: phoneNumber || null,

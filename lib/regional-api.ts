@@ -72,7 +72,7 @@ class RegionalAPI {
   }
 
   // For future implementation when cities API is available
-  async getCities(provinceId: string): Promise<any[]> {
+  async getCities(provinceId: string): Promise<{ id: string; name: string }[]> {
     try {
       // This endpoint needs to be determined from API documentation
       // For now, return empty array

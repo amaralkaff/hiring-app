@@ -261,7 +261,7 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
       if (!user) return;
 
       // Prepare profile update data from application
-      const profileUpdates: any = {};
+      const profileUpdates: Record<string, unknown> = {};
 
       // Map application fields to profile fields
       if (applicationData.full_name) {
@@ -283,7 +283,7 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
 
       if (existingProfile) {
         // Only update fields that are currently empty/null
-        const updatesToApply: any = {};
+        const updatesToApply: Record<string, unknown> = {};
 
         // Auto-populate fields from application data
         if (!existingProfile.full_name && applicationData.full_name) {

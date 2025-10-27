@@ -11,10 +11,16 @@ export default function MagicLinkSentPage() {
     const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
     const emailParam = urlParams.get('email');
 
+    const setEmailFromSource = (emailSource: string | null) => {
+      if (emailSource) {
+        setEmail(emailSource);
+      }
+    };
+
     if (emailParam) {
-      setEmail(emailParam);
+      setEmailFromSource(emailParam);
     } else if (storedEmail) {
-      setEmail(storedEmail);
+      setEmailFromSource(storedEmail);
     }
   }, []);
 

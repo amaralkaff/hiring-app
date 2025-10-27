@@ -72,15 +72,18 @@ export function CountryPhoneInput({
   useEffect(() => {
     if (value) {
       // Extract the dial code from the value
-      for (const country of countries) {
-        if (value.startsWith(country.dialCode)) {
-          setSelectedCountry(country);
-          setPhoneNumber(value.replace(country.dialCode, ''));
-          return;
+      const initializeCountry = () => {
+        for (const country of countries) {
+          if (value.startsWith(country.dialCode)) {
+            setSelectedCountry(country);
+            setPhoneNumber(value.replace(country.dialCode, ''));
+            return;
+          }
         }
-      }
-      // If no matching country found, just set the phone number
-      setPhoneNumber(value);
+        // If no matching country found, just set the phone number
+        setPhoneNumber(value);
+      };
+      initializeCountry();
     }
   }, [value]);
 
