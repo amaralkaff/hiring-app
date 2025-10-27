@@ -40,6 +40,10 @@ export async function login(formData: FormData) {
       const redirectPath = userRole === 'admin' ? '/dashboard' : '/jobs'
 
       revalidatePath('/', 'layout')
+
+      // Small delay to allow client-side auth state to update
+      await new Promise(resolve => setTimeout(resolve, 100))
+
       redirect(redirectPath)
     } else {
       // Passwordless magic link authentication for login

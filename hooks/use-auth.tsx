@@ -21,6 +21,7 @@ const getRole = async (userId: string): Promise<'admin' | 'applicant'> => {
 interface AuthContextType {
   user: User | null
   userRole: 'admin' | 'applicant' | null
+  isLoading: boolean
   signOut: () => Promise<void>
 }
 
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userRole, setUserRole] = useState<'admin' | 'applicant' | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
@@ -44,11 +46,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           setUser(session.user)
           // Get role from database
-          getRole(session.user.id).then(role => {
-            if (mounted) {
-              setUserRole(role)
-            }
-          })
+          const role = await getRole(session.user.id)
+          if (mounted) {
+            setUserRole(role)
+          }
         } else {
           setUser(null)
           setUserRole(null)
@@ -58,26 +59,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null)
           setUserRole(null)
         }
+      } finally {
+        if (mounted) {
+          setIsLoading(false)
+        }
       }
     }
 
     getSession()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return
 
+      setIsLoading(true)
       if (session?.user) {
         setUser(session.user)
         // Get role from database
-        getRole(session.user.id).then(role => {
-          if (mounted) {
-            setUserRole(role)
-          }
-        })
+        const role = await getRole(session.user.id)
+        if (mounted) {
+          setUserRole(role)
+        }
       } else {
         setUser(null)
         setUserRole(null)
+      }
+      if (mounted) {
+        setIsLoading(false)
       }
     })
 
@@ -94,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     userRole,
+    isLoading,
     signOut,
   }
 

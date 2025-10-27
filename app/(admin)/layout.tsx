@@ -4,33 +4,30 @@ import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, useBreadcrumbs } from '@/components/ui/breadcrumb';
 import { UserDropdown } from '@/components/ui/user-dropdown';
+import { AuthLoading } from '@/components/ui/auth-loading';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { user, userRole } = useAuth();
+  const { user, userRole, isLoading } = useAuth();
   const router = useRouter();
   const breadcrumbs = useBreadcrumbs();
 
-  // Redirect if not authenticated or wrong role
+  // Redirect if not authenticated or wrong role - only after loading is complete
   useEffect(() => {
-    if (user && userRole === null) {
-      // Still loading role, don't redirect yet
-      return;
+    if (isLoading) {
+      return; // Don't do anything while loading
     }
+
     if (user && userRole !== 'admin') {
       router.push('/jobs');
     } else if (!user) {
       router.push('/login');
     }
-  }, [user, userRole, router]);
+  }, [user, userRole, isLoading, router]);
 
-  // Show loading state while user exists but role is still loading
-  if (user && userRole === null) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-      </div>
-    );
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return <AuthLoading message="Checking authentication..." />;
   }
 
   // Show minimal loading only when no user exists
