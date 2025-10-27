@@ -48,10 +48,11 @@ export async function login(prevState: LoginState, formData: FormData) {
 
       revalidatePath('/', 'layout')
 
-      // Small delay to allow client-side auth state to update
-      await new Promise(resolve => setTimeout(resolve, 100))
-
-      redirect(redirectPath)
+      return {
+        success: true,
+        redirectTo: redirectPath,
+        error: null
+      }
     } else {
       // Passwordless magic link authentication for login
       const { error } = await supabase.auth.signInWithOtp({
@@ -73,6 +74,7 @@ export async function login(prevState: LoginState, formData: FormData) {
       return {
         success: true,
         message: 'Tautan ajaib telah dikirim ke email Anda. Silakan periksa inbox Anda untuk masuk.',
+        redirectTo: '/auth/magic-link-sent',
         error: null
       }
     }
@@ -147,7 +149,8 @@ export async function register(formData: FormData) {
       // Whether confirmation is required depends on Supabase settings; we redirect to magic-link-sent for consistency
       return {
         success: true,
-        message: 'Akun berhasil didaftarkan. Jika perlu konfirmasi, kami telah mengirim email verifikasi.'
+        message: 'Akun berhasil didaftarkan. Jika perlu konfirmasi, kami telah mengirim email verifikasi.',
+        redirectTo: '/auth/magic-link-sent'
       }
     }
 
@@ -183,7 +186,9 @@ export async function register(formData: FormData) {
 
     return {
       success: true,
-      message: 'Tautan ajaib telah dikirim ke email Anda. Silakan periksa inbox Anda untuk masuk.'
+      message: 'Tautan ajaib telah dikirim ke email Anda. Silakan periksa inbox Anda untuk masuk.',
+      redirectTo: '/auth/magic-link-sent',
+      error: null
     }
   } catch (error) {
     // Handle Next.js redirect errors - these are expected and not actual errors

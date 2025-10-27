@@ -28,6 +28,7 @@ export default function DashboardClient({ initialJobs }: DashboardClientProps) {
   // Use React's use hook to handle the initial data properly
   const [jobsPromise] = useState(() => Promise.resolve(initialJobs));
   const jobs = use(jobsPromise);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortOption, setSortOption] = useState<SortOption>('date-desc');
@@ -83,12 +84,15 @@ export default function DashboardClient({ initialJobs }: DashboardClientProps) {
   };
 
   const fetchJobs = async () => {
+    setIsLoading(true);
     try {
       await fetch('/api/jobs');
       // Note: filteredJobs will update automatically via useMemo
       // when jobs state changes
     } catch (error) {
       console.error('Error fetching jobs:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -142,6 +146,17 @@ export default function DashboardClient({ initialJobs }: DashboardClientProps) {
                 </div>
               </div>
             </div>
+
+            {/* Job List Container with Loading */}
+            <div className="relative">
+            {isLoading && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center z-50">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-main border-t-transparent"></div>
+                  <p className="text-primary-main font-medium animate-pulse">Loading jobs...</p>
+                </div>
+              </div>
+            )}
 
             {/* Job List or Empty State */}
             {filteredJobs.length === 0 ? (
@@ -263,7 +278,8 @@ export default function DashboardClient({ initialJobs }: DashboardClientProps) {
                 })}
               </div>
             )}
-          </div>
+            </div>
+            </div>
 
           {/* Right Sidebar - Recruitment Card */}
           <div className="w-80 flex-shrink-0">
@@ -292,6 +308,7 @@ export default function DashboardClient({ initialJobs }: DashboardClientProps) {
           </div>
         </div>
       </div>
+      
 
       {/* Create Job Modal */}
       <CreateJobModal
@@ -300,5 +317,6 @@ export default function DashboardClient({ initialJobs }: DashboardClientProps) {
         onJobCreated={handleJobCreated}
       />
     </div>
+
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MapPinIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,17 @@ export default function ApplicantJobsClient({ initialJobs }: ApplicantJobsClient
   const [jobsPromise] = useState(() => Promise.resolve(initialJobs));
   const jobs = use(jobsPromise);
   const [selectedJob, setSelectedJob] = useState<Job | null>(initialJobs.length > 0 ? initialJobs[0] : null);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading state for initial navigation
   const router = useRouter();
+
+  // Simulate initial loading for navigation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500); // Show loading for 1.5 seconds on initial load
+
+    return () => clearTimeout(timer);
+  }, []);
 
   if (jobs.length === 0) {
     return (
@@ -29,6 +39,15 @@ export default function ApplicantJobsClient({ initialJobs }: ApplicantJobsClient
   return (
     <div className="w-full pt-10 px-[104px] pb-10 bg-gray-50 min-h-screen">
         <div className="flex gap-6 max-w-[1440px] mx-auto">
+          {/* Loading Overlay */}
+          {isLoading && (
+            <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="flex flex-col items-center gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-500 border-t-transparent"></div>
+                <p className="text-teal-600 font-medium animate-pulse">Loading jobs...</p>
+              </div>
+            </div>
+          )}
           {/* Left Sidebar - Job List */}
           <div className="w-[406px] max-h-[calc(100vh-120px)] overflow-y-auto space-y-4 pr-2">
             {jobs.map((job) => (

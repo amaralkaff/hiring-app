@@ -181,11 +181,20 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
           applicant_name: candidate.users.full_name
         } : {})
       };
-      
-      candidate.attributes.forEach((attr) => {
-        flatData[attr.key] = attr.value || '';
-      });
-      
+
+      // Handle attributes - support both old array format and new object format
+      if (Array.isArray(candidate.attributes)) {
+        // Old format: array of {key, value} objects
+        candidate.attributes.forEach((attr) => {
+          flatData[attr.key] = attr.value || '';
+        });
+      } else if (candidate.attributes && typeof candidate.attributes === 'object') {
+        // New format: direct object with key-value pairs
+        Object.entries(candidate.attributes).forEach(([key, value]) => {
+          flatData[key] = value || '';
+        });
+      }
+
       return flatData;
     });
   }, [data]);
@@ -194,9 +203,18 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
   const columnKeys = useMemo(() => {
     const keys = new Set<string>();
     data.forEach((candidate) => {
-      candidate.attributes.forEach((attr) => {
-        keys.add(attr.key);
-      });
+      // Handle attributes - support both old array format and new object format
+      if (Array.isArray(candidate.attributes)) {
+        // Old format: array of {key, value} objects
+        candidate.attributes.forEach((attr) => {
+          keys.add(attr.key);
+        });
+      } else if (candidate.attributes && typeof candidate.attributes === 'object') {
+        // New format: direct object with key-value pairs
+        Object.keys(candidate.attributes).forEach((key) => {
+          keys.add(key);
+        });
+      }
     });
     return Array.from(keys);
   }, [data]);
@@ -227,11 +245,27 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
       },
       ...columnKeys.map((key) => {
         // Find label from first candidate that has this attribute
-         const sampleAttr = data
-           .flatMap((c) => c.attributes)
-           .find((attr) => attr.key === key);
-         
-         const label = sampleAttr?.label || key;
+        let label = key;
+
+        // Support both old array format and new object format
+        for (const candidate of data) {
+          if (Array.isArray(candidate.attributes)) {
+            // Old format: array of {key, label, value} objects
+            const attr = candidate.attributes.find((attr) => attr.key === key);
+            if (attr?.label) {
+              label = attr.label;
+              break;
+            }
+          } else if (candidate.attributes && typeof candidate.attributes === 'object') {
+            // New format: direct object - convert key to label
+            if (key in candidate.attributes) {
+              label = key.split('_').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+              ).join(' ');
+              break;
+            }
+          }
+        }
          
          // Add user information columns if available
          if (key === 'applicant_email' || key === 'applicant_name') {
@@ -266,6 +300,27 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
                 >
                   {value}
                 </a>
+              );
+            }
+            // Handle profile photos - display as image
+            if (key === 'photo_profile' && value) {
+              return (
+                <div className="flex items-center justify-center">
+                  <img
+                    src={value}
+                    alt="Profile"
+                    className="w-12 h-12 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const nextElement = target.nextSibling as HTMLElement;
+                      if (nextElement) {
+                        nextElement.style.display = 'block';
+                      }
+                    }}
+                  />
+                  <span className="hidden text-xs text-gray-500 ml-2">Failed to load</span>
+                </div>
               );
             }
             return <div className="truncate">{value || '-'}</div>;

@@ -48,14 +48,7 @@ export async function POST(
     const candidate = {
       id: candidateId,
       job_id: jobId,
-      attributes: Object.entries(body).map(([key, value], index) => ({
-        key,
-        label: key.split('_').map(word =>
-          word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' '),
-        value: value as string,
-        order: index + 1
-      }))
+      attributes: body
     };
 
     const supabase = await createClient();

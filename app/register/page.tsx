@@ -158,8 +158,19 @@ export default function RegisterPage() {
           }, 3000);
         }
       } else if (result?.success) {
-        localStorage.setItem('pendingEmail', data.email);
-        window.location.href = '/auth/magic-link-sent?email=' + encodeURIComponent(data.email);
+        // Handle auto-refresh for successful registration
+        if (result.redirectTo) {
+          if (result.redirectTo === '/auth/magic-link-sent') {
+            localStorage.setItem('pendingEmail', data.email);
+            window.location.href = '/auth/magic-link-sent?email=' + encodeURIComponent(data.email);
+          } else {
+            window.location.href = result.redirectTo;
+          }
+        } else {
+          // Fallback for backward compatibility
+          localStorage.setItem('pendingEmail', data.email);
+          window.location.href = '/auth/magic-link-sent?email=' + encodeURIComponent(data.email);
+        }
       }
     } finally {
       setIsPending(false);
@@ -386,14 +397,19 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   disabled={isPending || !!emailValidationError || ((emailExists || method === 'password') && (!form.watch('password') || form.watch('password') !== form.watch('confirmPassword')))}
-                  className="w-full h-12 bg-[#F5A623] hover:bg-[#E09612] text-white font-black rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 bg-[#F5A623] hover:bg-[#E09612] text-white font-black rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed relative"
                 >
                   {isPending ? (
                     <span className="flex items-center justify-center">
-                      {emailExists ? 'Masuk...' : (method === 'magic' ? 'Mengirim...' : 'Mendaftar...')}
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"></div>
+                      <span className="animate-pulse">
+                        {emailExists ? 'Masuk...' : (method === 'magic' ? 'Mengirim...' : 'Mendaftar...')}
+                      </span>
                     </span>
                   ) : (
-                    emailExists ? 'Masuk' : (method === 'magic' ? 'Daftar dengan email' : 'Daftar dengan password')
+                    <span className="flex items-center justify-center">
+                      {emailExists ? 'Masuk' : (method === 'magic' ? 'Daftar dengan email' : 'Daftar dengan password')}
+                    </span>
                   )}
                 </Button>
             </form>
@@ -430,15 +446,12 @@ export default function RegisterPage() {
             onClick={handleGoogleSignIn}
             disabled={!!isGooglePending}
             variant="outline"
-            className="w-full h-12 border-2 border-gray-300 flex items-center justify-center gap-3 text-gray-700 hover:bg-gray-100 hover:border-gray-400 hover:shadow-sm hover:text-gray-900 font-black rounded-md transition-all"
+            className="w-full h-12 border-2 border-gray-300 flex items-center justify-center gap-3 text-gray-700 hover:bg-gray-100 hover:border-gray-400 hover:shadow-sm hover:text-gray-900 font-black rounded-md transition-all relative"
           >
               {isGooglePending ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Masuk dengan Google...
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-600 border-t-transparent mr-3"></div>
+                  <span className="animate-pulse">Masuk dengan Google...</span>
                 </span>
               ) : (
                 <>

@@ -60,7 +60,7 @@ export interface CandidateAttribute {
 // Form data types
 export interface ApplicationFormData {
   full_name?: string;
-  photo_profile?: string; // Base64 image
+  photo_profile?: string; // URL to Supabase storage or Base64 image
   gender?: string;
   domicile?: string;
   email?: string;

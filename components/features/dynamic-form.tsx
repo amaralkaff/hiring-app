@@ -163,17 +163,10 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
             setValue('email', user.email);
           }
 
-              // Profile photo URL - convert to base64 for the form
+              // Profile photo URL - use the Supabase URL directly
           if (profileData.profile_photo_url) {
-            try {
-              const base64Photo = await convertImageUrlToBase64(profileData.profile_photo_url);
-              if (base64Photo) {
-                setValue('photo_profile', base64Photo);
-                console.log('Profile photo converted and pre-filled');
-              }
-            } catch (error) {
-              console.error('Error converting profile photo:', error);
-            }
+            setValue('photo_profile', profileData.profile_photo_url);
+            console.log('Profile photo URL pre-filled:', profileData.profile_photo_url);
           }
 
           console.log('Form pre-populated with profile data');
@@ -229,23 +222,7 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
     }
   };
 
-  // Helper function to convert image URL to base64
-  const convertImageUrlToBase64 = async (imageUrl: string): Promise<string | null> => {
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.error('Error converting image URL to base64:', error);
-      return null;
-    }
-  };
-
+  
   // Function to auto-populate user profile from application data
   const autoPopulateUserProfile = async (applicationData: ApplicationFormData) => {
     try {
