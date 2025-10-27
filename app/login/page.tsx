@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/form';
 import { login, signInWithGoogle } from '@/app/auth/actions';
 import { cn } from '@/lib/utils';
+import { KeyIcon } from '@heroicons/react/24/outline';
 
 const loginSchema = z.object({
   email: z.string().email('Email tidak valid'),
@@ -126,46 +127,44 @@ function LoginPageContent() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              {loginMethod === 'magic' ? 'Bergabung dengan Rakamin' : 'Masuk ke Akun Anda'}
+              {loginMethod === 'magic' ? 'Bergabung dengan Rakamin' : 'Masuk dengan Password'}
             </h2>
             <p className="text-sm text-gray-600 mb-6">
-              {loginMethod === 'magic' ? (
-                <>
-                  Sudah punya akun?{' '}
-                  <Link href="/signup" className="text-[#01959F] hover:text-[#017a84] font-medium">
-                    Masuk
-                  </Link>
-                </>
-              ) : (
-                <>
-                  Belum punya akun?{' '}
-                  <Link href="/signup" className="text-[#01959F] hover:text-[#017a84] font-medium">
-                    Daftar
-                  </Link>
-                </>
-              )}
+              Belum punya akun?{' '}
+              <Link href="/register" className="text-[#01959F] font-medium hover:underline">
+                Daftar dengan menggunakan email
+              </Link>
             </p>
-            {(message || successMessage) && (
+            {successMessage && (
               <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
                 <p className="text-sm text-green-600 flex items-center gap-2">
                   <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  {successMessage || message}
+                  {successMessage}
                 </p>
               </div>
             )}
-            {(authError || error) && (
+
+            {authError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-sm text-red-600 text-center">
-                  {authError || (() => {
+                  {authError}
+                </p>
+              </div>
+            )}
+
+            {error && !authError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600 text-center">
+                  {(() => {
                     switch(error) {
                       case 'confirmation_failed':
-                        return 'Konfirmasi email gagal. Silakan coba lagi.';
+                        return 'Email ini sudah terdaftar sebagai akun di Rakamin Academy. Silakan masuk.';
                       case 'confirmation_link_expired':
                         return 'Tautan konfirmasi Anda telah kedaluwarsa. Silakan daftar lagi untuk menerima email konfirmasi baru.';
                       default:
-                        return message || 'Autentikasi gagal. Silakan coba lagi.';
+                        return 'Autentikasi gagal. Silakan coba lagi.';
                     }
                   })()}
                 </p>
@@ -176,6 +175,7 @@ function LoginPageContent() {
                 )}
               </div>
             )}
+
             {emailValidationError && loginMethod === 'magic' && !successMessage && (
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                 <p className="text-sm text-yellow-600 text-center">
@@ -247,7 +247,6 @@ function LoginPageContent() {
                 </div>
               )}
 
-              <div className="pt-2">
                 <Button
                   type="submit"
                   disabled={isPending || (loginMethod === 'magic' && !!emailValidationError)}
@@ -265,7 +264,6 @@ function LoginPageContent() {
                     loginMethod === 'magic' ? 'Daftar dengan email' : 'Masuk'
                   )}
                 </Button>
-              </div>
             </form>
           </Form>
 
@@ -281,6 +279,17 @@ function LoginPageContent() {
               </div>
             </div>
           </div>
+  
+        {/* Password Login Option */}
+          <Button
+            type="button"
+            onClick={() => setLoginMethod(loginMethod === 'password' ? 'magic' : 'password')}
+            variant="outline"
+            className="w-full h-12 border-2 border-gray-300 flex items-center justify-center gap-3 text-gray-700 hover:bg-gray-100 hover:border-gray-400 hover:shadow-sm hover:text-gray-900 font-black rounded-md transition-all mb-2"
+          >
+            <KeyIcon className="w-5 h-5" />
+            {loginMethod === 'password' ? 'Gunakan Magic Link' : 'Masuk dengan Password'}
+          </Button>
 
           {/* Google Sign In */}
           <Button

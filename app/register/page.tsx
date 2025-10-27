@@ -7,6 +7,7 @@ import * as z from 'zod';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useSearchParams } from 'next/navigation';
 import {
   Form,
   FormControl,
@@ -15,42 +16,49 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { signup, signInWithGoogle } from '@/app/auth/actions';
+import { register, signInWithGoogle, login } from '@/app/auth/actions';
+import  {KeyIcon}  from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
-const signupSchema = z.object({
+const registerSchema = z.object({
   email: z.string()
     .min(1, 'Email diperlukan')
     .email('Alamat email tidak valid')
     .refine((email) => {
-      // Basic email validation to catch common issues
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) return false;
-
-      // Check for common invalid patterns like double dots
       if (email.includes('..')) return false;
-
-      // Check if domain has valid format
       const domain = email.split('@')[1];
       if (!domain || !domain.includes('.') || domain.startsWith('.') || domain.endsWith('.')) return false;
-
       return true;
     }, 'Alamat email tidak valid'),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+}).refine((data) => {
+  if (data.password || data.confirmPassword) {
+    return (data.password?.length ?? 0) >= 8 && data.password === data.confirmPassword;
+  }
+  return true;
+}, {
+  message: 'Password minimal 8 karakter dan harus sama',
+  path: ['confirmPassword'],
 });
 
-type SignupFormData = z.infer<typeof signupSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function SignupPage() {
+export default function RegisterPage() {
+  const [method, setMethod] = useState<'magic' | 'password'>('magic');
   const [authError, setAuthError] = useState('');
   const [isPending, setIsPending] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [isGooglePending, setIsGooglePending] = useState(false);
   const [emailValidationError, setEmailValidationError] = useState('');
+  const [emailExists, setEmailExists] = useState<boolean | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const form = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       email: '',
     },
@@ -59,22 +67,52 @@ export default function SignupPage() {
   // Watch email field for real-time validation
   const emailValue = form.watch('email');
 
-  // Real-time email validation
+  // Real-time email validation + existence check (debounced)
   useEffect(() => {
-    if (emailValue && emailValue.length > 0) {
-      const validationResult = signupSchema.safeParse({ email: emailValue });
-      if (!validationResult.success && validationResult.error.issues.some(issue => issue.path.includes('email'))) {
-        const emailError = validationResult.error.issues.find(issue => issue.path.includes('email'))?.message;
-        setEmailValidationError(emailError || 'Email tidak valid');
+    let active = true;
+    const run = async () => {
+      if (emailValue && emailValue.length > 0) {
+        const validationResult = registerSchema.safeParse({ email: emailValue });
+        if (!validationResult.success && validationResult.error.issues.some(issue => issue.path.includes('email'))) {
+          const emailError = validationResult.error.issues.find(issue => issue.path.includes('email'))?.message;
+          if (!active) return;
+          setEmailValidationError(emailError || 'Email tidak valid');
+          setEmailExists(null);
+          return;
+        } else {
+          if (!active) return;
+          setEmailValidationError('');
+        }
+
+        // Debounce 400ms before checking
+        await new Promise(r => setTimeout(r, 400));
+        if (!active) return;
+
+        try {
+          const res = await fetch('/api/auth/check-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailValue })
+          });
+          const json = await res.json();
+          if (!active) return;
+          setEmailExists(!!json.exists);
+        } catch {
+          if (!active) return;
+          setEmailExists(null);
+        }
       } else {
+        if (!active) return;
         setEmailValidationError('');
+        setEmailExists(null);
       }
-    } else {
-      setEmailValidationError('');
-    }
+    };
+
+    run();
+    return () => { active = false };
   }, [emailValue]);
 
-  const onSubmit = async (data: SignupFormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     setAuthError('');
     setSuccessMessage('');
     setIsPending(true);
@@ -83,18 +121,41 @@ export default function SignupPage() {
       const formData = new FormData();
       formData.set('email', data.email);
 
-      const result = await signup(formData);
+      if (emailExists) {
+        // Existing user: show password login, or offer magic-link
+        // We'll perform password login here for primary CTA
+        formData.set('method', 'password');
+        formData.set('password', data.password || '');
+        const resp = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: data.email, password: data.password })
+        })
+        const json = await resp.json();
+        if (!resp.ok || json.error) {
+          setAuthError(json.error || 'Email atau password salah');
+          return;
+        }
+        // Successful login will be completed by Supabase cookie session; navigate appropriately
+        window.location.href = '/jobs';
+        return;
+      }
+
+      // New user: use chosen method (magic or password)
+      formData.set('method', method);
+      if (method === 'password') {
+        formData.set('password', data.password || '');
+      }
+      const result = await register(formData);
 
       if (result?.error) {
         setAuthError(result.error);
-        // If email already registered, show a helpful message
         if (result.errorCode === 'EMAIL_ALREADY_REGISTERED') {
           setTimeout(() => {
             window.location.href = '/login';
           }, 3000);
         }
       } else if (result?.success) {
-        // Store email in localStorage and redirect to magic link sent page
         localStorage.setItem('pendingEmail', data.email);
         window.location.href = '/auth/magic-link-sent?email=' + encodeURIComponent(data.email);
       }
@@ -182,17 +243,26 @@ export default function SignupPage() {
 
         {/* White Card Container */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              Bergabung dengan Rakamin
-            </h2>
-            <p className="text-sm text-gray-600 mb-6">
-              Sudah punya akun?{' '}
-              <Link href="/login" className="text-[#01959F] hover:text-[#017a84] font-medium">
-                Masuk
-              </Link>
-            </p>
-            {successMessage && (
+         <div>
+           <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+             {emailExists ? 'Email sudah terdaftar' : 'Bergabung dengan Rakamin'}
+           </h2>
+           <p className="text-sm text-gray-600 mb-6">
+             {emailExists ? (
+               <>
+                 Kami menemukan akun dengan email tersebut. Anda dapat masuk dengan password atau meminta magic link.
+               </>
+             ) : (
+               <>
+                 Sudah punya akun?{' '}
+                 <Link href="/login" className="text-[#01959F] hover:text-[#017a84] font-medium">
+                   Masuk
+                 </Link>
+               </>
+             )}
+           </p>
+
+              {successMessage && (
               <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
                 <p className="text-sm text-green-600 flex items-center gap-2">
                   <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -250,26 +320,78 @@ export default function SignupPage() {
                 )}
               />
 
-              
-              <div className="pt-2">
+              {(emailExists || method === 'password') && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          Password
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            id="password-field"
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder="Minimal 8 karakter"
+                            className={cn(
+                              "w-full h-12 px-4 text-base rounded-md border-2 transition-all outline-none",
+                              form.formState.errors.password
+                                ? "border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                                : "border-[#01959F] bg-white hover:border-[#017a84] focus:border-[#01959F] focus:ring-2 focus:ring-[#01959F]/20"
+                            )}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-sm text-red-600" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          Konfirmasi Password
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder="Ulangi password"
+                            className={cn(
+                              "w-full h-12 px-4 text-base rounded-md border-2 transition-all outline-none",
+                              form.formState.errors.confirmPassword
+                                ? "border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                                : "border-[#01959F] bg-white hover:border-[#017a84] focus:border-[#01959F] focus:ring-2 focus:ring-[#01959F]/20"
+                            )}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-sm text-red-600" />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
                 <Button
                   type="submit"
-                  disabled={isPending || !!emailValidationError}
+                  disabled={isPending || !!emailValidationError || ((emailExists || method === 'password') && (!form.watch('password') || form.watch('password') !== form.watch('confirmPassword')))}
                   className="w-full h-12 bg-[#F5A623] hover:bg-[#E09612] text-white font-black rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPending ? (
                     <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Mengirim...
+                      {emailExists ? 'Masuk...' : (method === 'magic' ? 'Mengirim...' : 'Mendaftar...')}
                     </span>
                   ) : (
-                    'Daftar dengan email'
+                    emailExists ? 'Masuk' : (method === 'magic' ? 'Daftar dengan email' : 'Daftar dengan password')
                   )}
                 </Button>
-              </div>
             </form>
           </Form>
 
@@ -285,14 +407,27 @@ export default function SignupPage() {
             </div>
           </div>
 
+      {/* Password Registration Option */}
+          {!emailExists && (
+            <Button
+              type="button"
+              onClick={() => setMethod(method === 'password' ? 'magic' : 'password')}
+              variant="outline"
+              className="w-full h-12 border-2 border-gray-300 flex items-center justify-center gap-3 text-gray-700 hover:bg-gray-100 hover:border-gray-400 hover:shadow-sm hover:text-gray-900 font-black rounded-md transition-all mb-2"
+            >
+              <KeyIcon className="w-5 h-5" />
+              {method === 'password' ? 'Gunakan Magic Link' : 'Daftar dengan Password'}
+            </Button>
+          )}
+
           {/* Google Sign In */}
           <Button
             type="button"
             onClick={handleGoogleSignIn}
-              disabled={isGooglePending}
-              variant="outline"
-              className="w-full h-12 border-2 border-gray-300 flex items-center justify-center gap-3 text-gray-700 hover:bg-gray-100 hover:border-gray-400 hover:shadow-sm hover:text-gray-900 font-black rounded-md transition-all"
-            >
+            disabled={!!isGooglePending}
+            variant="outline"
+            className="w-full h-12 border-2 border-gray-300 flex items-center justify-center gap-3 text-gray-700 hover:bg-gray-100 hover:border-gray-400 hover:shadow-sm hover:text-gray-900 font-black rounded-md transition-all"
+          >
               {isGooglePending ? (
                 <span className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

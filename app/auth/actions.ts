@@ -60,11 +60,13 @@ export async function login(formData: FormData) {
   }
 }
 
-export async function signup(formData: FormData) {
+export async function register(formData: FormData) {
   'use server'
 
   const supabase = await createClient()
   const email = formData.get('email') as string
+  const method = (formData.get('method') as string) || 'magic'
+  const password = (formData.get('password') as string) || ''
 
   if (!email || !email.includes('@')) {
     return { error: 'Alamat email tidak valid' }
@@ -85,12 +87,48 @@ export async function signup(formData: FormData) {
       };
     }
 
-    // Use passwordless magic link authentication
+    if (method === 'password') {
+      // Password-based registration
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000'}/auth/confirm`,
+          data: {
+            full_name: email.split('@')[0],
+            role: 'applicant',
+            created_at: new Date().toISOString(),
+          },
+        },
+      })
+
+      if (signUpError) {
+        if (
+          signUpError.message.includes('User already registered') ||
+          signUpError.message.includes('duplicate') ||
+          signUpError.message.includes('already been registered')
+        ) {
+          return {
+            error: 'Email ini sudah terdaftar. Silakan masuk.',
+            errorCode: 'EMAIL_ALREADY_REGISTERED',
+          }
+        }
+        return { error: signUpError.message }
+      }
+
+      // Whether confirmation is required depends on Supabase settings; we redirect to magic-link-sent for consistency
+      return {
+        success: true,
+        message: 'Akun berhasil didaftarkan. Jika perlu konfirmasi, kami telah mengirim email verifikasi.'
+      }
+    }
+
+    // Default: passwordless magic link authentication
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000'}/auth/confirm`,
-        shouldCreateUser: true, // Allow user creation for new signups
+        shouldCreateUser: true, // Allow user creation for new registrations
         data: {
           full_name: email.split('@')[0], // Extract name from email
           role: 'applicant', // Explicitly set default role to applicant
@@ -120,7 +158,7 @@ export async function signup(formData: FormData) {
       message: 'Tautan ajaib telah dikirim ke email Anda. Silakan periksa inbox Anda untuk masuk.'
     }
   } catch (error) {
-    console.error('Unexpected error during magic link generation:', error)
+    console.error('Unexpected error during register:', error)
     return { error: 'Terjadi kesalahan. Silakan coba lagi.' }
   }
 }
@@ -246,5 +284,21 @@ export async function signOut() {
     }
     // Still redirect to login even if there's an error
     redirect('/login')
+  }
+}
+
+export async function checkEmailRegistered(email: string) {
+  'use server'
+  const supabase = await createClient()
+  if (!email || !email.includes('@')) return { exists: false }
+  try {
+    const { data } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single()
+    return { exists: !!data }
+  } catch {
+    return { exists: false }
   }
 }

@@ -114,8 +114,8 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Redirect authenticated users from login/signup pages
-    if ((path === '/login' || path === '/signup')) {
+    // Redirect authenticated users from login/register pages
+    if ((path === '/login' || path === '/register')) {
       const redirectUrl = new URL(
         userRole === 'admin' ? '/dashboard' : '/jobs',
         request.url

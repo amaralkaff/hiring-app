@@ -401,7 +401,7 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
               <DatePicker
                 value={dateOfBirthValue || ''}
                 onChange={(value) => setValue(fieldKey, value)}
-                placeholder="Choose your date of birth"
+                placeholder="Select your date of birth"
                 className={cn(
                   errors[fieldKey]
                     ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"

@@ -392,7 +392,7 @@ export default function ProfilePage() {
                         setErrors(prev => ({ ...prev, date_of_birth: '' }))
                       }
                     }}
-                    placeholder="Choose your date of birth"
+                    placeholder="Select your date of birth"
                     className={cn(
                       errors.date_of_birth
                         ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"
