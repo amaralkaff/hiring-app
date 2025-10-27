@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import {
   useReactTable,
   getCoreRowModel,
@@ -42,9 +43,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  ChevronLeftIcon, 
-  ChevronRightIcon, 
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ArrowsUpDownIcon,
   ChevronUpIcon,
   ChevronDownIcon,
@@ -191,7 +192,7 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
       } else if (candidate.attributes && typeof candidate.attributes === 'object') {
         // New format: direct object with key-value pairs
         Object.entries(candidate.attributes).forEach(([key, value]) => {
-          flatData[key] = value || '';
+          flatData[key] = (value as string) || '';
         });
       }
 
@@ -306,9 +307,11 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
             if (key === 'photo_profile' && value) {
               return (
                 <div className="flex items-center justify-center">
-                  <img
+                  <Image
                     src={value}
                     alt="Profile"
+                    width={48}
+                    height={48}
                     className="w-12 h-12 rounded-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
