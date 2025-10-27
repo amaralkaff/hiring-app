@@ -90,8 +90,23 @@ function LoginPageContent() {
           window.location.href = '/auth/magic-link-sent?email=' + encodeURIComponent(data.email);
         }
         // The user will be redirected after clicking the magic link
+      } else {
+        // Password authentication successful - server will handle redirect
+        // No action needed here as the server action will redirect
+        setAuthError('');
+        setSuccessMessage('Login berhasil! Mengalihkan...');
       }
+    } catch (error) {
+      // Handle Next.js redirect errors - these are expected and not actual errors
+      if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+        // This is the expected redirect, don't treat it as an error
+        throw error; // Re-throw to let Next.js handle the redirect
+      }
+
+      // Set error for actual login failures
+      setAuthError('Terjadi kesalahan. Silakan coba lagi.');
     } finally {
+      // Always reset isPending - the server will handle redirect if successful
       setIsPending(false);
     }
   };
@@ -202,10 +217,10 @@ function LoginPageContent() {
                         autoComplete="email"
                         placeholder=""
                         className={cn(
-                          "w-full h-12 px-4 text-base rounded-md border-2 transition-all outline-none",
+                          "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
                           form.formState.errors.email
-                            ? "border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                            : "border-[#01959F] bg-white hover:border-[#017a84] focus:border-[#01959F] focus:ring-2 focus:ring-[#01959F]/20"
+                            ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus placeholder:text-neutral-60"
+                            : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
                         )}
                         {...field}
                       />
@@ -232,10 +247,10 @@ function LoginPageContent() {
                             autoComplete="current-password"
                             placeholder=""
                             className={cn(
-                              "w-full h-12 px-4 text-base rounded-md border-2 transition-all outline-none",
+                              "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
                               form.formState.errors.password
-                                ? "border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                                : "border-[#01959F] bg-white hover:border-[#017a84] focus:border-[#01959F] focus:ring-2 focus:ring-[#01959F]/20"
+                                ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus placeholder:text-neutral-60"
+                                : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
                             )}
                             {...field}
                           />

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/server'
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -25,10 +25,22 @@ export async function POST(request: Request) {
       )
     }
 
+    // Get user role for proper redirect
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', data.user?.id)
+      .single()
+
+    const userRole = userData?.role || 'applicant'
+    const redirectPath = userRole === 'admin' ? '/dashboard' : '/jobs'
+
     return Response.json({
       success: true,
       user: data.user,
       session: data.session,
+      role: userRole,
+      redirectPath,
     })
   } catch (error) {
     console.error('Login error:', error)

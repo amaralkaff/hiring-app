@@ -61,6 +61,8 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: '',
+      password: '',
+      confirmPassword: '',
     },
   });
 
@@ -307,10 +309,10 @@ export default function RegisterPage() {
                         autoComplete="email"
                         placeholder=""
                         className={cn(
-                          "w-full h-12 px-4 text-base rounded-md border-2 transition-all outline-none",
+                          "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
                           form.formState.errors.email
-                            ? "border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                            : "border-[#01959F] bg-white hover:border-[#017a84] focus:border-[#01959F] focus:ring-2 focus:ring-[#01959F]/20"
+                            ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus placeholder:text-neutral-60"
+                            : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
                         )}
                         {...field}
                       />
@@ -337,10 +339,10 @@ export default function RegisterPage() {
                             autoComplete="new-password"
                             placeholder="Minimal 8 karakter"
                             className={cn(
-                              "w-full h-12 px-4 text-base rounded-md border-2 transition-all outline-none",
+                              "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
                               form.formState.errors.password
-                                ? "border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                                : "border-[#01959F] bg-white hover:border-[#017a84] focus:border-[#01959F] focus:ring-2 focus:ring-[#01959F]/20"
+                                ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus placeholder:text-neutral-60"
+                                : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
                             )}
                             {...field}
                           />
@@ -364,10 +366,10 @@ export default function RegisterPage() {
                             autoComplete="new-password"
                             placeholder="Ulangi password"
                             className={cn(
-                              "w-full h-12 px-4 text-base rounded-md border-2 transition-all outline-none",
+                              "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
                               form.formState.errors.confirmPassword
-                                ? "border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                                : "border-[#01959F] bg-white hover:border-[#017a84] focus:border-[#01959F] focus:ring-2 focus:ring-[#01959F]/20"
+                                ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus placeholder:text-neutral-60"
+                                : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
                             )}
                             {...field}
                           />

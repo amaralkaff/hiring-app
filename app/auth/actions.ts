@@ -29,8 +29,18 @@ export async function login(formData: FormData) {
         return { error: 'Email atau password salah' }
       }
 
+      // Get user role to determine correct redirect
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single()
+
+      const userRole = userData?.role || 'applicant'
+      const redirectPath = userRole === 'admin' ? '/dashboard' : '/jobs'
+
       revalidatePath('/', 'layout')
-      redirect('/dashboard')
+      redirect(redirectPath)
     } else {
       // Passwordless magic link authentication for login
       const { error } = await supabase.auth.signInWithOtp({
@@ -55,6 +65,12 @@ export async function login(formData: FormData) {
       }
     }
   } catch (error) {
+    // Handle Next.js redirect errors - these are expected and not actual errors
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      // This is the expected redirect, don't treat it as an error
+      throw error; // Re-throw to let Next.js handle the redirect
+    }
+
     console.error('Unexpected error during login:', error)
     return { error: 'Terjadi kesalahan. Silakan coba lagi.' }
   }
@@ -158,6 +174,12 @@ export async function register(formData: FormData) {
       message: 'Tautan ajaib telah dikirim ke email Anda. Silakan periksa inbox Anda untuk masuk.'
     }
   } catch (error) {
+    // Handle Next.js redirect errors - these are expected and not actual errors
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      // This is the expected redirect, don't treat it as an error
+      throw error; // Re-throw to let Next.js handle the redirect
+    }
+
     console.error('Unexpected error during register:', error)
     return { error: 'Terjadi kesalahan. Silakan coba lagi.' }
   }
@@ -222,6 +244,12 @@ export async function createAdminUser(formData: FormData) {
     revalidatePath('/', 'layout')
     redirect('/dashboard')
   } catch (error) {
+    // Handle Next.js redirect errors - these are expected and not actual errors
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      // This is the expected redirect, don't treat it as an error
+      throw error; // Re-throw to let Next.js handle the redirect
+    }
+
     console.error('Unexpected error during admin creation:', error)
     return { error: 'Terjadi kesalahan saat membuat admin. Silakan coba lagi.' }
   }
@@ -231,29 +259,41 @@ export async function signInWithGoogle() {
   'use server'
 
   const supabase = await createClient()
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/confirm`,
-      scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-      queryParams: {
-        access_type: 'offline',
-        prompt: 'consent',
-      },
-    },
-  })
 
-  if (error) {
-    console.error('Google OAuth error:', error)
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/confirm`,
+        scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    })
+
+    if (error) {
+      console.error('Google OAuth error:', error)
+      return { error: 'Gagal login dengan Google. Silakan coba lagi.' }
+    }
+
+    // For server-side implementation, we need to handle the redirect
+    if (data.url) {
+      redirect(data.url)
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    // Handle Next.js redirect errors - these are expected and not actual errors
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      // This is the expected redirect, don't treat it as an error
+      throw error; // Re-throw to let Next.js handle the redirect
+    }
+
+    console.error('Unexpected Google OAuth error:', error)
     return { error: 'Gagal login dengan Google. Silakan coba lagi.' }
   }
-
-  // For server-side implementation, we need to handle the redirect
-  if (data.url) {
-    redirect(data.url)
-  }
-
-  return { success: true, data }
 }
 
 export async function signOut() {
