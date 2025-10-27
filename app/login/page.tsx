@@ -215,12 +215,12 @@ function LoginPageContent() {
                       <Input
                         type="email"
                         autoComplete="email"
-                        placeholder=""
+                        placeholder="nama@email.com"
                         className={cn(
                           "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
                           form.formState.errors.email
                             ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus placeholder:text-neutral-60"
-                            : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
+                            : "border-neutral-40 bg-neutral-10 hover:border-primary-hover focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
                         )}
                         {...field}
                       />
@@ -245,12 +245,12 @@ function LoginPageContent() {
                           <Input
                             type="password"
                             autoComplete="current-password"
-                            placeholder=""
+                            placeholder="Masukkan kata sandi"
                             className={cn(
                               "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
                               form.formState.errors.password
                                 ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus placeholder:text-neutral-60"
-                                : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
+                                : "border-neutral-40 bg-neutral-10 hover:border-primary-hover focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
                             )}
                             {...field}
                           />

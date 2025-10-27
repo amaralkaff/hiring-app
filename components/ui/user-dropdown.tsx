@@ -78,6 +78,7 @@ export function UserDropdown({ user, userRole }: UserDropdownProps) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-3 text-sm rounded-lg hover:bg-gray-100 p-2 transition-colors"
+        data-testid="user-avatar"
       >
         <div className="w-8 h-8 rounded-full overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -112,14 +113,12 @@ export function UserDropdown({ user, userRole }: UserDropdownProps) {
             <p className="text-sm font-medium text-gray-900">{getDisplayName()}</p>
             <p className="text-xs text-gray-500 capitalize">{userRole}</p>
           </div>
-          {userRole === 'applicant' && (
             <button
-              onClick={() => router.push('/profile')}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              Profile Settings
-            </button>
-          )}
+            onClick={() => router.push(userRole === 'admin' ? '/admin-profile' : '/profile')}
+            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            Profile Settings
+          </button>
           <form action={serverSignOut}>
             <button
               type="submit"

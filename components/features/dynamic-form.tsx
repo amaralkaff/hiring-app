@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { createClient } from '@/utils/supabase/client';
 import { regionalAPI, type Province } from '@/lib/regional-api';
 import type { Job, ApplicationFormData } from '@/lib/types';
 import DatePicker from '@/components/ui/date-picker';
+import { CountryPhoneInput } from '@/components/ui/country-phone-input';
 
 interface DynamicApplicationFormProps {
   job: Job;
@@ -28,6 +29,7 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [phoneValid, setPhoneValid] = useState(true);
 
   const fields = job.application_form?.sections[0].fields || [];
 
@@ -73,9 +75,15 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
       }
 
       if (field.key === 'phone_number') {
-        validationRules[field.key].pattern = {
-          value: /^[+]?[1-9]\d{1,14}$/,
-          message: 'Please enter a valid phone number (e.g., +628123456789)',
+        validationRules[field.key].validate = (value: string) => {
+          if (!value && field.validation.required) {
+            return 'Phone number is required';
+          }
+          // Basic validation - check if it starts with + and contains digits
+          if (value && !(/^\+\d+/.test(value))) {
+            return 'Please enter a valid phone number';
+          }
+          return true;
         };
       }
     }
@@ -87,11 +95,18 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
     control,
     setValue,
     reset,
+    watch,
+    trigger,
     formState: { errors },
   } = useForm<ApplicationFormData>();
 
   // Use useWatch instead of watch for React 19.2 compatibility
   const photoProfile = useWatch({ control, name: 'photo_profile' });
+
+  // Memoized phone number change handler
+  const handlePhoneChange = useCallback((value: string) => {
+    setValue('phone_number', value, { shouldValidate: false });
+  }, [setValue]);
 
   // Watch all fields that might need conditional rendering
   // This ensures hooks are always called in the same order
@@ -497,21 +512,22 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
               <label className="text-s-regular text-neutral-100 block">
                 Phone number{isRequired && <span className="text-danger-main ml-1">*</span>}
               </label>
-              <input
-                id={field.key}
-                type="tel"
-                {...register(fieldKey, validationRules[field.key])}
-                placeholder="+6281XXXXXXXXX"
+              <CountryPhoneInput
+                value={watch('phone_number') || ''}
+                onChange={handlePhoneChange}
+                placeholder="Enter phone number"
+                error={errors[fieldKey]?.message}
                 className={cn(
-                  "w-full h-12 px-4 text-m-regular rounded-lg border-2 transition-all outline-none",
                   errors[fieldKey]
                     ? "border-danger-main bg-neutral-10 focus:border-danger-main focus:ring-2 focus:ring-danger-focus"
                     : "border-neutral-40 bg-neutral-10 hover:border-neutral-50 focus:border-primary-main focus:ring-2 focus:ring-primary-focus placeholder:text-neutral-60"
                 )}
               />
-              {errors[fieldKey] && (
-                <p className="text-s-regular text-danger-main mt-2">{errors[fieldKey]?.message}</p>
-              )}
+              {/* Hidden input for react-hook-form validation */}
+              <input
+                type="hidden"
+                {...register(fieldKey, validationRules[field.key])}
+              />
             </div>
           );
         }

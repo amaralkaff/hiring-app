@@ -20,7 +20,7 @@ import { User } from '@supabase/supabase-js'
 import DatePicker from '@/components/ui/date-picker'
 import { CountryPhoneInput } from '@/components/ui/country-phone-input'
 
-interface UserProfile {
+interface AdminProfile {
   id: string
   email: string
   full_name: string | null
@@ -31,12 +31,13 @@ interface UserProfile {
   linkedin_link: string | null
   date_of_birth: string | null
   gender: string | null
+  role: string | null
 }
 
-export default function ProfilePage() {
+export default function AdminProfilePage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [profile, setProfile] = useState<AdminProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -50,6 +51,7 @@ export default function ProfilePage() {
   const [linkedinLink, setLinkedinLink] = useState('')
   const [dateOfBirth, setDateOfBirth] = useState('')
   const [gender, setGender] = useState('')
+  const [role, setRole] = useState('admin')
 
   // Photo capture state
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
@@ -166,6 +168,7 @@ export default function ProfilePage() {
         setLinkedinLink(profileData.linkedin_link || '')
         setDateOfBirth(profileData.date_of_birth || '')
         setGender(profileData.gender || '')
+        setRole(profileData.role || 'admin')
       }
     } catch (error) {
       console.error('Error loading profile:', error)
@@ -271,6 +274,7 @@ export default function ProfilePage() {
         linkedin_link: linkedinLink || null,
         date_of_birth: dateOfBirth || null,
         gender: gender || null,
+        role: role || 'admin',
       }
 
       await supabase
@@ -297,35 +301,35 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen bg-neutral-20 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-neutral-20 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Combined Card with Header, Info Banner and Form */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-40">
           {/* Header with Back Button */}
           <div className="p-6 pb-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => router.push('/jobs')}
-                  className="w-10 h-10 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                  onClick={() => router.push('/dashboard')}
+                  className="w-10 h-10 rounded-full bg-white border border-neutral-40 flex items-center justify-center hover:bg-neutral-10 transition-colors"
                 >
-                  <ArrowLeftIcon className="w-5 h-5 text-gray-700" />
+                  <ArrowLeftIcon className="w-5 h-5 text-neutral-80" />
                 </button>
-                <h1 className="text-lg font-bold text-gray-900">
-                  Profile Settings
+                <h1 className="text-lg font-bold text-neutral-100">
+                  Admin Profile Settings
                 </h1>
               </div>
 
               {/* Info Banner - Top Right */}
               <div className="rounded-lg p-3 flex items-start gap-2 max-w-xs">
-                <p className="text-xs">ℹ️ All fields are optional</p>
+                <p className="text-xs text-neutral-60">ℹ️ Manage your admin profile</p>
               </div>
             </div>
           </div>
@@ -334,7 +338,7 @@ export default function ProfilePage() {
           <div className="p-8 pt-0">
             <form onSubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} className="space-y-6">
               <div className="space-y-4">
-                {/* Photo Profile with Gesture Capture (1st) - Optional */}
+                {/* Photo Profile with Gesture Capture - Optional */}
                 <div className="space-y-2">
                   <label className="text-s-regular text-neutral-100 block">
                     Photo profile
@@ -352,7 +356,7 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Full Name (2nd) - Optional */}
+                {/* Full Name - Optional */}
                 <div className="space-y-2">
                   <label className="text-s-regular text-neutral-100 block">
                     Full name
@@ -380,7 +384,18 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Date of Birth (3rd) - Optional */}
+                {/* Role - Fixed for admin */}
+                <div className="space-y-2">
+                  <label className="text-s-regular text-neutral-100 block">
+                    Role
+                  </label>
+                  <div className="flex items-center gap-2 p-3 bg-neutral-10 rounded-lg border-2 border-neutral-40">
+                    <span className="text-m-regular text-neutral-100 font-medium">Administrator</span>
+                    <span className="text-xs text-neutral-60">(System Role)</span>
+                  </div>
+                </div>
+
+                {/* Date of Birth - Optional */}
                 <div className="space-y-2">
                   <label className="text-s-regular text-neutral-100 block">
                     Date of birth
@@ -405,7 +420,7 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Gender (4th) - Optional */}
+                {/* Gender - Optional */}
                 <div className="space-y-2">
                   <label className="text-s-regular text-neutral-100 block">
                     Pronoun (gender)
@@ -449,7 +464,7 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Domicile (5th) - Indonesian Provinces from API */}
+                {/* Domicile - Indonesian Provinces from API */}
                 <div className="space-y-2">
                   <label className="text-s-regular text-neutral-100 block">
                     Domicile (Province)
@@ -486,7 +501,7 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Phone Number (6th) - Optional */}
+                {/* Phone Number - Optional */}
                 <div className="space-y-2">
                   <label className="text-s-regular text-neutral-100 block">
                     Phone number
@@ -504,7 +519,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                {/* Email (7th) - Optional (Disabled) */}
+                {/* Email - Optional (Disabled) */}
                 <div className="space-y-2">
                   <label className="text-s-regular text-neutral-100 block">
                     Email
@@ -527,7 +542,7 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* LinkedIn Link (8th) - Optional */}
+                {/* LinkedIn Link - Optional */}
                 <div className="space-y-2">
                   <label className="text-s-regular text-neutral-100 block">
                     Link Linkedin
@@ -560,7 +575,7 @@ export default function ProfilePage() {
                 <Button
                   type="submit"
                   disabled={saving || uploadingPhoto}
-                  className="w-full h-10 bg-[#01959F] hover:bg-[#017a84] text-white font-semibold rounded-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-10 bg-primary-main hover:bg-primary-hover active:bg-primary-pressed text-white font-semibold rounded-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? 'Saving...' : uploadingPhoto ? 'Uploading Photo...' : 'Save Changes'}
                 </Button>
@@ -574,9 +589,9 @@ export default function ProfilePage() {
       {uploadingPhoto && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-            <p className="text-lg font-medium">Uploading photo...</p>
-            <p className="text-sm text-gray-500 mt-2">This will only take a moment</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main mx-auto mb-4"></div>
+            <p className="text-lg font-medium text-neutral-100">Uploading photo...</p>
+            <p className="text-sm text-neutral-60 mt-2">This will only take a moment</p>
           </div>
         </div>
       )}
