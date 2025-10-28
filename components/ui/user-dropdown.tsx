@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { signOut as serverSignOut } from '@/app/auth/actions';
 import { createClient } from '@/utils/supabase/client';
 
@@ -17,8 +16,7 @@ interface UserDropdownProps {
 }
 
 export function UserDropdown({ user, userRole }: UserDropdownProps) {
-  const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
   const [profileData, setProfileData] = useState<{
     profile_photo_url: string | null;
     profile_photo_name: string | null;
@@ -119,12 +117,6 @@ export function UserDropdown({ user, userRole }: UserDropdownProps) {
             <p className="text-sm font-medium text-gray-900">{getDisplayName()}</p>
             <p className="text-xs text-gray-500 capitalize">{userRole}</p>
           </div>
-            <button
-            onClick={() => router.push(userRole === 'admin' ? '/admin-profile' : '/profile')}
-            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            Profile Settings
-          </button>
           <form action={serverSignOut}>
             <button
               type="submit"

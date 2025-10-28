@@ -103,11 +103,7 @@ export function useBreadcrumbs() {
       }
     }
     
-    // Profile page
-    if (segments[0] === 'profile') {
-      return [{ label: 'Profile Settings', href: '/profile', active: true }];
-    }
-
+    
     // Default fallback
     return [{ label: 'Home', href: '/', active: true }];
   };

@@ -18,6 +18,7 @@ import { regionalAPI, type Province } from '@/lib/regional-api';
 import type { Job, ApplicationFormData } from '@/lib/types';
 import DatePicker from '@/components/ui/date-picker';
 import { CountryPhoneInput } from '@/components/ui/country-phone-input';
+import { isBase64DataURL } from '@/lib/photo-upload';
 
 interface DynamicApplicationFormProps {
   job: Job;
@@ -191,15 +192,56 @@ export function DynamicApplicationForm({ job }: DynamicApplicationFormProps) {
     ).join(' ');
   };
 
-  
+  // Process form data to handle photo URLs properly
+  const processFormData = async (data: ApplicationFormData): Promise<ApplicationFormData> => {
+    const processedData = { ...data };
+
+    // Handle photo profile - convert base64 to URL if needed
+    if (processedData.photo_profile && isBase64DataURL(processedData.photo_profile)) {
+      console.log('Converting base64 photo to URL...');
+      try {
+        const result = await fetch('/api/upload/photo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            base64Data: processedData.photo_profile,
+            fileName: `profile-photo-${Date.now()}.jpg`
+          }),
+        });
+
+        if (result.ok) {
+          const uploadResult = await result.json();
+          if (uploadResult.success && uploadResult.url) {
+            processedData.photo_profile = uploadResult.url;
+            console.log('Photo converted to URL:', uploadResult.url);
+          }
+        } else {
+          console.error('Failed to convert base64 photo to URL');
+          // Keep base64 as fallback for now
+        }
+      } catch (error) {
+        console.error('Error converting photo:', error);
+        // Keep base64 as fallback for now
+      }
+    }
+
+    return processedData;
+  };
+
+
   const onSubmit = async (data: ApplicationFormData) => {
     setIsSubmitting(true);
     try {
+      // Process form data to handle photo conversion
+      const processedData = await processFormData(data);
+
       // Submit to API
       const response = await fetch(`/api/candidates/${job.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(processedData),
       });
 
       if (response.ok) {

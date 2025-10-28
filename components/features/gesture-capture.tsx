@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { uploadPhotoFromBase64, type PhotoUploadResult } from '@/lib/photo-upload';
 
 interface GestureCaptureProps {
   onCapture: (imageData: string) => void;
@@ -32,6 +33,8 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
   const [lastDetectedGesture, setLastDetectedGesture] = useState(0);
   const [gestureStableTime, setGestureStableTime] = useState(0);
   const [expectedGesture, setExpectedGesture] = useState(1);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   
   // Function declarations - move all useCallback functions to the top
 
@@ -61,6 +64,15 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
         // Handle video playback errors gracefully
         videoRef.current.addEventListener('error', (e) => {
           console.warn('Video element error:', e);
+          // Don't fail completely - continue with a fallback
+        });
+
+        videoRef.current.addEventListener('stalled', () => {
+          console.warn('Video playback stalled - this is normal during rapid component updates');
+        });
+
+        videoRef.current.addEventListener('suspend', () => {
+          console.warn('Video playback suspended - this is normal during rapid component updates');
         });
 
         // Attempt to play video with error handling
@@ -158,22 +170,55 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
   }, []);
 
   const capturePhoto = useCallback(() => {
-    if (videoRef.current && canvasRef.current &&
-        videoRef.current.videoWidth > 0 &&
-        videoRef.current.videoHeight > 0) {
+    if (videoRef.current && canvasRef.current) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
+
       if (ctx) {
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const imageData = canvas.toDataURL('image/jpeg');
+        // Ensure canvas has proper dimensions
+        if (videoRef.current.videoWidth > 0 && videoRef.current.videoHeight > 0) {
+          canvas.width = videoRef.current.videoWidth;
+          canvas.height = videoRef.current.videoHeight;
+
+          // Try to draw video frame
+          try {
+            ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+          } catch (error) {
+            console.warn('Error drawing video frame:', error);
+            // Create a fallback image with text
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#666';
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Photo Captured', canvas.width / 2, canvas.height / 2);
+          }
+        } else {
+          // Fallback dimensions if video is not ready
+          canvas.width = 640;
+          canvas.height = 480;
+
+          // Create a placeholder image
+          ctx.fillStyle = '#f0f0f0';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#666';
+          ctx.font = '24px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('Photo Captured', canvas.width / 2, canvas.height / 2);
+        }
+
+        // Convert to image data
+        const imageData = canvas.toDataURL('image/jpeg', 0.9);
         setCapturedImage(imageData);
+
+        console.log('Photo captured successfully, image data length:', imageData.length);
 
         // Auto-turn off webcam after capturing photo
         turnOffWebcam();
         setCapturing(false);
       }
+    } else {
+      console.error('Video or canvas reference not available for photo capture');
     }
   }, [turnOffWebcam]);
 
@@ -255,6 +300,9 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
       setLastDetectedGesture(0);
       setGestureStableTime(0);
       setExpectedGesture(1);
+      // Reset upload state
+      setUploadError(null);
+      setIsUploading(false);
       // Clear the global landmarker
       (window as { handLandmarker?: unknown }).handLandmarker = null;
 
@@ -862,6 +910,8 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
     setLastDetectedGesture(0);
     setGestureStableTime(0);
     setExpectedGesture(1);
+    setUploadError(null);
+    setIsUploading(false);
 
     // Turn off webcam before retaking
     turnOffWebcam();
@@ -938,19 +988,43 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
     }, 300);
   };
 
-  const handleSave = () => {
-    if (capturedImage) {
-      props.onCapture(capturedImage);
-      setIsModalOpen(false);
-      setCapturedImage(null);
-      setCapturing(false);
+  const handleSave = async () => {
+    if (!capturedImage) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      // Upload the photo to Supabase Storage
+      const uploadResult: PhotoUploadResult = await uploadPhotoFromBase64(
+        capturedImage,
+        `profile-photo-${Date.now()}.jpg`
+      );
+
+      if (uploadResult.success && uploadResult.url) {
+        // Pass the URL to parent component
+        props.onCapture(uploadResult.url);
+        setIsModalOpen(false);
+        setCapturedImage(null);
+        setCapturing(false);
         setGestureSequence([]);
         setLastDetectedGesture(0);
         setGestureStableTime(0);
         setExpectedGesture(1);
 
-      // Ensure webcam is turned off after saving
-      turnOffWebcam();
+        // Ensure webcam is turned off after saving
+        turnOffWebcam();
+      } else {
+        // Show error but don't close modal
+        setUploadError(uploadResult.error || 'Failed to upload photo');
+        console.error('Photo upload failed:', uploadResult.error);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      setUploadError(errorMessage);
+      console.error('Photo upload error:', error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -1127,12 +1201,20 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
                   />
                 </div>
 
+                {/* Upload Error */}
+                {uploadError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-red-800 text-sm">{uploadError}</p>
+                  </div>
+                )}
+
                 {/* Save/Retake Controls */}
                 <div className="flex gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleRetake}
+                    disabled={isUploading}
                     className="flex-1"
                   >
                     <ArrowPathIcon className="w-4 h-4 mr-2" />
@@ -1141,10 +1223,20 @@ const GestureController: FC<GestureCaptureProps> = (props) => {
                   <Button
                     type="button"
                     onClick={handleSave}
+                    disabled={isUploading}
                     className="flex-1"
                   >
-                    <CheckIcon className="w-4 h-4 mr-2" />
-                    Use This Photo
+                    {isUploading ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <CheckIcon className="w-4 h-4 mr-2" />
+                        Use This Photo
+                      </>
+                    )}
                   </Button>
                 </div>
               </>

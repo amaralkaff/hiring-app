@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/server'
 
 export async function GET() {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     let user = null;
     let error: { message?: string } | null = null;
@@ -34,17 +34,42 @@ export async function GET() {
       .from('users')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (roleError) {
       console.error('Error fetching user role:', roleError)
+    }
+
+    // If user doesn't exist in users table, create default profile
+    if (!userData) {
+      console.log('User profile not found in API, creating default profile for user:', user.id)
+      try {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: user.id,
+            role: 'applicant'
+          })
+
+        if (insertError) {
+          console.error('Error creating default user profile in API:', insertError)
+        } else {
+          console.log('Default user profile created successfully in API')
+        }
+      } catch (insertError) {
+        console.error('Unexpected error creating user profile in API:', insertError)
+      }
     }
 
     return Response.json({
       success: true,
       user: {
         ...user,
-        role: userData?.role || null,
+        role: userData?.role || 'applicant',
+      },
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
       },
     })
   } catch (error) {

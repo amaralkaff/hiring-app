@@ -11,14 +11,36 @@ const getRole = async (userId: string): Promise<'admin' | 'applicant'> => {
       .from('users')
       .select('role')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error fetching user role:', error)
       return 'applicant'
     }
 
-    return data?.role || 'applicant'
+    // If user doesn't exist in users table, create default profile
+    if (!data) {
+      console.log('User profile not found, creating default profile for user:', userId)
+      try {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: userId,
+            role: 'applicant'
+          })
+
+        if (insertError) {
+          console.error('Error creating default user profile:', insertError)
+        } else {
+          console.log('Default user profile created successfully')
+        }
+      } catch (insertError) {
+        console.error('Unexpected error creating user profile:', insertError)
+      }
+      return 'applicant'
+    }
+
+    return data.role || 'applicant'
   } catch (error) {
     console.error('Unexpected error fetching user role:', error)
     return 'applicant'

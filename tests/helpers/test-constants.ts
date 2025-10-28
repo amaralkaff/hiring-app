@@ -18,8 +18,6 @@ export const APP_URLS = {
   register: '/register',
   dashboard: '/dashboard',
   jobs: '/jobs',
-  adminProfile: '/admin-profile',
-  profile: '/profile',
 } as const;
 
 export const PAGE_TITLES = {
@@ -27,8 +25,6 @@ export const PAGE_TITLES = {
   register: 'Rakamin - Career Portal',
   dashboard: 'Rakamin - Career Portal',
   jobs: 'Rakamin - Career Portal',
-  profile: 'Rakamin - Career Portal',
-  adminProfile: 'Rakamin - Career Portal',
 } as const;
 
 export const SELECTORS = {
@@ -48,7 +44,6 @@ export const SELECTORS = {
   userAvatar: '[data-testid="user-avatar"]',
   userDropdown: '[data-testid="user-dropdown"]',
   logoutButton: 'text=Logout',
-  profileLink: 'text=Profile Settings',
   // Header selectors
   header: 'header',
   navigation: 'nav',

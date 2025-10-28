@@ -12,7 +12,7 @@ export async function GET(
     
     const { data: candidates, error } = await supabase
       .from('candidates')
-      .select('*')
+      .select('id, job_id, attributes, created_at, updated_at')
       .eq('job_id', jobId)
       .order('created_at', { ascending: false });
 
@@ -56,7 +56,7 @@ export async function POST(
     const { data, error } = await supabase
       .from('candidates')
       .insert([candidate])
-      .select()
+      .select('id, job_id, attributes, created_at, updated_at')
       .single();
 
     if (error) {

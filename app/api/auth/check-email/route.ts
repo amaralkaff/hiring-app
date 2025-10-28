@@ -13,9 +13,14 @@ export async function POST(request: Request) {
       .from('users')
       .select('id')
       .eq('email', email)
-      .single()
+      .maybeSingle()
 
-    return NextResponse.json({ exists: !!data }, { status: 200 })
+    return NextResponse.json({ exists: !!data }, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
   } catch {
     return NextResponse.json({ exists: false }, { status: 200 })
   }

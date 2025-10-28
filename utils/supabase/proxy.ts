@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // 1. Specify protected and public routes
-const protectedRoutes = ['/dashboard', '/jobs', '/profile', '/success']
+const protectedRoutes = ['/dashboard', '/jobs', '/success']
 
 export async function proxy(request: NextRequest) {
   return await updateSession(request)
@@ -91,12 +91,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Profile route protection - only applicants can access profile
-    if (path.startsWith('/profile') && userRole !== 'applicant') {
-      const redirectUrl = new URL('/dashboard', request.url)
-      return NextResponse.redirect(redirectUrl)
-    }
-
+    
     // 6. Auto-authorization: Redirect authenticated users from root and auth pages
     if (path === '/') {
       // Check if there's a magic link code parameter - if so, let it process through auth flow

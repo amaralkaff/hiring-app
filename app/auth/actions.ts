@@ -41,7 +41,7 @@ export async function login(prevState: LoginState, formData: FormData) {
         .from('users')
         .select('role')
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single()
+        .maybeSingle()
 
       const userRole = userData?.role || 'applicant'
       const redirectPath = userRole === 'admin' ? '/dashboard' : '/jobs'
@@ -108,7 +108,7 @@ export async function register(formData: FormData) {
       .from('users')
       .select('email, role')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       return {
@@ -353,7 +353,7 @@ export async function checkEmailRegistered(email: string) {
       .from('users')
       .select('id')
       .eq('email', email)
-      .single()
+      .maybeSingle()
     return { exists: !!data }
   } catch {
     return { exists: false }

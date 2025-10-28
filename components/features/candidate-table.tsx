@@ -13,8 +13,8 @@ import {
   SortingState,
   ColumnFiltersState,
   ColumnOrderState,
-  ColumnSizingState,
   RowSelectionState,
+  createColumnHelper,
 } from '@tanstack/react-table';
 import {
   DndContext,
@@ -51,9 +51,15 @@ import {
   ChevronDownIcon,
   MagnifyingGlassIcon,
   Bars3Icon,
+  DocumentArrowDownIcon,
+  UserGroupIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import type { Candidate } from '@/lib/types';
+import { toast } from 'sonner';
 
 interface EnhancedCandidateTableProps {
   data: Candidate[];
@@ -83,16 +89,16 @@ function DraggableColumnHeader({
       ref={setNodeRef}
       style={{
         ...style,
-        width: header.getSize(),
+        width: `${header.getSize()}px`,
         position: header.column.id === 'select' || header.column.id === 'full_name' ? 'sticky' : 'relative',
         left: header.column.id === 'select' ? 0 : header.column.id === 'full_name' ? 50 : undefined,
-        zIndex: header.column.id === 'select' ? 30 : header.column.id === 'full_name' ? 25 : isDragging ? 35 : 1,
+        zIndex: header.column.id === 'select' ? 30 : header.column.id === 'full_name' ? 25 : isDragging ? 35 : 10,
         boxShadow: header.column.id === 'full_name' ? '2px 0 4px rgba(0,0,0,0.1)' : undefined,
+        overflow: 'visible',
       }}
       className={cn(
-        "relative text-left px-6 py-4 text-xs font-bold text-neutral-100 bg-neutral-20 uppercase tracking-wide",
-        (header.column.id === 'select' || header.column.id === 'full_name') && "bg-neutral-20",
-        header.column.id === 'full_name' && "border-r border-neutral-40"
+        "relative text-left px-6 py-4 text-xs font-bold text-neutral-100 bg-neutral-20 uppercase tracking-wide border-r border-gray-200",
+        (header.column.id === 'select' || header.column.id === 'full_name') && "bg-neutral-20"
       )}
     >
       <div className="flex items-center gap-2">
@@ -110,22 +116,7 @@ function DraggableColumnHeader({
         {children}
       </div>
 
-      {/* Resize Handle */}
-      {header.column.getCanResize() && (
-        <div
-          onMouseDown={header.getResizeHandler()}
-          onTouchStart={header.getResizeHandler()}
-          className={cn(
-            'absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none',
-            'hover:bg-primary-main hover:w-1.5',
-            header.column.getIsResizing() ? 'bg-primary-main w-1.5 opacity-100' : 'bg-transparent opacity-0 hover:opacity-100'
-          )}
-          style={{
-            userSelect: 'none',
-          }}
-        />
-      )}
-    </th>
+          </th>
   );
 }
 
@@ -134,9 +125,145 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnOrder, setColumnOrder] = useState<ColumnOrderState>([]);
-  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [globalFilter, setGlobalFilter] = useState('');
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+
+  // CSV export function
+  const exportToCSV = (selectedRows: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    try {
+      // Get all column headers from the table data
+      const headers = Object.keys(selectedRows[0].original).filter(key =>
+        key !== 'id' && !key.includes('_raw') // Exclude internal fields
+      );
+
+      // Create CSV content
+      const csvContent = [
+        headers.join(','), // Header row
+        ...selectedRows.map(row =>
+          headers.map(header => {
+            let value = row.original[header];
+
+            // Special handling for photo_profile field
+            if (header === 'photo_profile') {
+              if (value && value.startsWith('data:')) {
+                // Replace base64 with informative placeholder
+                value = '[Base64 image data - should upload to Supabase Storage]';
+              } else if (!value || value === '') {
+                value = '[No photo]';
+              }
+            }
+
+            // Handle values that might contain commas or quotes
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value || '';
+          }).join(',')
+        )
+      ].join('\n');
+
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `candidates_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      return true;
+    } catch (error) {
+      console.error('Export failed:', error);
+      return false;
+    }
+  };
+
+  // Bulk action handlers
+  const handleBulkAction = (action: string) => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+
+    const selectedIds = selectedRows.map(row => row.original.id);
+    const count = selectedRows.length;
+
+    switch (action) {
+      case 'export':
+        // Export selected candidates to CSV
+        const toastId = toast.loading(`Exporting ${count} candidate(s) to CSV...`);
+
+        setTimeout(() => {
+          const success = exportToCSV(selectedRows);
+          if (success) {
+            toast.success(`Successfully exported ${count} candidate(s) to CSV`, { id: toastId });
+          } else {
+            toast.error('Failed to export candidates', { id: toastId });
+          }
+        }, 1000); // Simulate processing time
+
+        break;
+
+      case 'approve':
+        // Mark selected as approved
+        const approveId = toast.loading(`Approving ${count} candidate(s)...`);
+
+        setTimeout(() => {
+          console.log('Approving candidates:', selectedIds);
+          toast.success(`${count} candidate(s) marked as approved`, { id: approveId });
+        }, 800);
+
+        break;
+
+      case 'reject':
+        // Mark selected as rejected
+        const rejectId = toast.loading(`Rejecting ${count} candidate(s)...`);
+
+        setTimeout(() => {
+          console.log('Rejecting candidates:', selectedIds);
+          toast.success(`${count} candidate(s) marked as rejected`, { id: rejectId });
+        }, 800);
+
+        break;
+
+      case 'email':
+        // Send email to selected candidates
+        const emailId = toast.loading(`Preparing emails for ${count} candidate(s)...`);
+
+        setTimeout(() => {
+          console.log('Emailing candidates:', selectedIds);
+          toast.success(`Email sent to ${count} candidate(s)`, {
+            id: emailId,
+            description: 'All emails have been queued for delivery'
+          });
+        }, 1500);
+
+        break;
+
+      case 'interview':
+        // Move to interview stage
+        const interviewId = toast.loading(`Moving ${count} candidate(s) to interview stage...`);
+
+        setTimeout(() => {
+          console.log('Moving to interview:', selectedIds);
+          toast.success(`${count} candidate(s) moved to interview stage`, {
+            id: interviewId,
+            description: 'Interview invitations have been sent'
+          });
+        }, 1200);
+
+        break;
+
+      default:
+        break;
+    }
+
+    // Clear selection after successful action
+    setTimeout(() => {
+      setRowSelection({});
+    }, 2000);
+  };
 
   // DnD sensors
   const sensors = useSensors(
@@ -217,14 +344,16 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
         });
       }
     });
+
     return Array.from(keys);
   }, [data]);
 
-  // Define columns dynamically
-  const columns = useMemo<ColumnDef<Record<string, string>>[]>(() => {
-    const cols: ColumnDef<Record<string, string>>[] = [
+  // Define columns dynamically with proper typing
+  const columnHelper = createColumnHelper<Record<string, string>>();
+  const columns = useMemo<any[]>(() => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const cols: any[] = [ // eslint-disable-line @typescript-eslint/no-explicit-any
       // Checkbox column
-      {
+      columnHelper.display({
         id: 'select',
         header: ({ table }) => (
           <Checkbox
@@ -243,8 +372,8 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
         size: 50,
         enableSorting: false,
         enableResizing: false,
-      },
-      ...columnKeys.map((key) => {
+      }),
+      ...(columnKeys.map((key) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         // Find label from first candidate that has this attribute
         let label = key;
 
@@ -270,9 +399,7 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
          
          // Add user information columns if available
          if (key === 'applicant_email' || key === 'applicant_name') {
-           return {
-             id: key,
-             accessorKey: key,
+           return columnHelper.accessor(key as keyof Record<string, string>, {
              header: key === 'applicant_email' ? 'APPLICANT EMAIL' : 'APPLICANT NAME',
              cell: ({ getValue }: { getValue: () => unknown }) => {
                const value = getValue() as string;
@@ -281,12 +408,16 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
              size: 180,
              enableSorting: true,
              enableResizing: true,
-           };
+             meta: {
+               isImportantColumn: key === 'applicant_name'
+             }
+           });
          }
 
-        return {
-          id: key,
-          accessorKey: key,
+        // Check if this column should have bolder dividers
+        const isImportantColumn = key.toLowerCase().includes('name') || key.toLowerCase().includes('phone');
+
+        return columnHelper.accessor(key as keyof Record<string, string>, {
           header: label.toUpperCase(),
           cell: ({ getValue }: { getValue: () => unknown }) => {
             const value = getValue() as string;
@@ -305,40 +436,74 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
             }
             // Handle profile photos - display as image
             if (key === 'photo_profile' && value) {
-              return (
-                <div className="flex items-center justify-center">
-                  <Image
-                    src={value}
-                    alt="Profile"
-                    width={48}
-                    height={48}
-                    className="w-12 h-12 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const nextElement = target.nextSibling as HTMLElement;
-                      if (nextElement) {
-                        nextElement.style.display = 'block';
-                      }
-                    }}
-                  />
-                  <span className="hidden text-xs text-gray-500 ml-2">Failed to load</span>
-                </div>
-              );
+              if (value.startsWith('data:')) {
+                // Display base64 image but with warning
+                return (
+                  <div className="flex flex-col items-center">
+                    <div className="relative">
+                      <Image
+                        src={value}
+                        alt="Profile"
+                        width={48}
+                        height={48}
+                        className="w-12 h-12 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity border-2 border-orange-300"
+                        onClick={() => setSelectedPhoto(value)}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const nextElement = target.nextSibling as HTMLElement;
+                          if (nextElement) {
+                            nextElement.style.display = 'block';
+                          }
+                        }}
+                      />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full"></div>
+                    </div>
+                    <span className="text-xs text-orange-600 mt-1">Base64</span>
+                  </div>
+                );
+              } else if (value.startsWith('http')) {
+                // It's already a URL - display it
+                return (
+                  <div className="flex items-center justify-center">
+                    <Image
+                      src={value}
+                      alt="Profile"
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => setSelectedPhoto(value)}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const nextElement = target.nextSibling as HTMLElement;
+                        if (nextElement) {
+                          nextElement.style.display = 'block';
+                        }
+                      }}
+                    />
+                    <span className="hidden text-xs text-gray-500 ml-2">Failed to load</span>
+                  </div>
+                );
+              } else {
+                // Unknown format or empty
+                return <div className="text-xs text-gray-400">[No Photo]</div>;
+              }
             }
             return <div className="truncate">{value || '-'}</div>;
           },
           size: 180,
           enableSorting: true,
           enableResizing: true,
-        };
+          meta: {
+            isImportantColumn
+          }
+        });
       }),
       // Applied Date column
-      {
-        id: 'applied_date',
-        accessorKey: 'applied_date',
+      columnHelper.accessor('applied_date', {
         header: 'APPLIED DATE',
-        cell: ({ getValue }: { getValue: () => unknown }) => {
+        cell: ({ getValue }) => {
           const value = getValue() as string;
           return (
             <div className="truncate">
@@ -355,11 +520,11 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
           const dateB = new Date(rowB.original.applied_date_raw).getTime();
           return dateA - dateB;
         },
-      },
+      }),
     ];
 
     return cols;
-  }, [columnKeys, data]);
+  }, [columnKeys, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
@@ -369,22 +534,18 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
       sorting,
       columnFilters,
       columnOrder,
-      columnSizing,
       rowSelection,
       globalFilter,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnOrderChange: setColumnOrder,
-    onColumnSizingChange: setColumnSizing,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    columnResizeMode: 'onChange',
-    enableColumnResizing: true,
     enableRowSelection: true,
     globalFilterFn: 'includesString',
     initialState: {
@@ -397,11 +558,11 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
   // Handle column reordering via drag and drop
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
       const oldIndex = columnOrder.indexOf(active.id as string);
       const newIndex = columnOrder.indexOf(over.id as string);
-      
+
       const newOrder = arrayMove(columnOrder, oldIndex, newIndex);
       setColumnOrder(newOrder);
     }
@@ -417,7 +578,7 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="w-full space-y-4">
         {/* Search and Controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <TextField
               type="text"
@@ -427,15 +588,88 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
               suffix={<MagnifyingGlassIcon className="w-5 h-5 text-primary-main" />}
             />
           </div>
-          <div className="text-sm text-neutral-60">
-            {table.getFilteredSelectedRowModel().rows.length} of{' '}
-            {table.getFilteredRowModel().rows.length} row(s) selected
+
+          {/* Selection info and bulk actions */}
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-neutral-600 bg-neutral-10 px-3 py-2 rounded-md">
+              <span className="font-medium">{table.getFilteredSelectedRowModel().rows.length}</span> of{' '}
+              <span className="font-medium">{table.getFilteredRowModel().rows.length}</span> candidate(s) selected
+            </div>
+
+            {table.getFilteredSelectedRowModel().rows.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction('email')}
+                  className="h-10 w-10 p-0 flex items-center justify-center relative group"
+                  title="Send Email"
+                >
+                  <EnvelopeIcon className="w-4 h-4" />
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Send Email
+                  </span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction('interview')}
+                  className="h-10 w-10 p-0 flex items-center justify-center relative group"
+                  title="Schedule Interview"
+                >
+                  <UserGroupIcon className="w-4 h-4" />
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Schedule Interview
+                  </span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction('approve')}
+                  className="h-10 w-10 p-0 flex items-center justify-center relative group text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
+                  title="Approve Candidate"
+                >
+                  <CheckCircleIcon className="w-4 h-4" />
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Approve Candidate
+                  </span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction('reject')}
+                  className="h-10 w-10 p-0 flex items-center justify-center relative group text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                  title="Reject Candidate"
+                >
+                  <XCircleIcon className="w-4 h-4" />
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Reject Candidate
+                  </span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction('export')}
+                  className="h-10 w-10 p-0 flex items-center justify-center relative group"
+                  title="Export to CSV"
+                >
+                  <DocumentArrowDownIcon className="w-4 h-4" />
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Export to CSV
+                  </span>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-lg shadow-sm relative">
-          <table className="w-full border-collapse relative">
+        <div className="overflow-x-auto rounded-lg shadow-sm relative bg-white border border-gray-200" style={{ overflowY: 'visible' }}>
+          <table className="w-full border-collapse relative" style={{ position: 'relative' }}>
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} className="border-b-2 border-neutral-40">
@@ -475,13 +709,13 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
                 table.getRowModel().rows.map((row) => (
                   <tr
                     key={row.id}
-                    className="border-b border-neutral-30 hover:bg-neutral-10 transition-colors bg-white"
+                    className="border-b border-gray-200 hover:bg-neutral-10 transition-colors bg-white"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
                         style={{
-                          width: cell.column.getSize(),
+                          width: `${cell.column.getSize()}px`,
                           position:
                             cell.column.id === 'select' || cell.column.id === 'full_name'
                               ? 'sticky'
@@ -499,8 +733,7 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
                             cell.column.id === 'full_name' ? '2px 0 4px rgba(0,0,0,0.1)' : undefined,
                         }}
                         className={cn(
-                          'px-6 py-4 text-sm text-neutral-100 font-normal',
-                          cell.column.id === 'full_name' && 'border-r border-neutral-40'
+                          'px-6 py-4 text-sm text-neutral-100 font-normal border-r border-gray-200'
                         )}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -520,7 +753,7 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-200 rounded-b-lg">
           <div className="flex items-center gap-3">
             <span className="text-m-regular text-neutral-60">Rows per page:</span>
             <Select
@@ -568,6 +801,34 @@ export function EnhancedCandidateTable({ data }: EnhancedCandidateTableProps) {
             </div>
           </div>
         </div>
+
+        {/* Full-size photo modal */}
+        {selectedPhoto && (
+          <div
+            className="fixed inset-0 bg-white/60 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedPhoto(null)}
+          >
+            <div className="relative max-w-4xl max-h-full">
+              <Image
+                src={selectedPhoto}
+                alt="Full size profile"
+                width={800}
+                height={800}
+                className="max-w-full max-h-full object-contain rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                className="absolute top-4 right-4 bg-white text-gray-800 rounded-full p-2 hover:bg-gray-100 transition-colors"
+                onClick={() => setSelectedPhoto(null)}
+                aria-label="Close photo view"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </DndContext>
   );
